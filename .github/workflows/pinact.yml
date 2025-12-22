@@ -1,0 +1,40 @@
+name: Pin GitHub Actions
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  pin:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        with:
+          python-version: "3.12"
+      - name: Setup uv
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+        with:
+          version: "0.7.22"
+      - name: Update pinned actions
+        run: |
+          ./scripts/tooling/ensure-tools.sh
+          pinact run -u
+      - name: Create PR
+        uses: peter-evans/create-pull-request@98357b18bf14b5342f975ff684046ec3b2a07725 # v8.0.0
+        with:
+          branch: chore/pinact
+          title: "chore: refresh pinned GitHub Actions"
+          commit-message: "chore: refresh pinned GitHub Actions"
+          body: "Automated pinact updates to keep GitHub Actions SHA-pinned."
+          labels: automated
