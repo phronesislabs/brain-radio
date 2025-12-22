@@ -136,3 +136,10 @@ Brain-Radio operates as a **Hierarchical Agent Swarm** utilizing the "Supervisor
 8. **Playback Agent:** Plays the approved queue (default) and optionally triggers playlist materialization for persistence.
 9. **Calibration Agent:** Uses feedback (skips/likes/ratings) to adjust ranking/selection within protocol constraints for future sessions.
 10. **Supervisor + Compliance Guardian:** Ensures identity correctness, branding/policy compliance, and enforces the invariant that only verified+scored URIs can be played.
+
+---
+
+## 4. Agent Workflow Rules (Automation & Security)
+
+- Use `scripts/tooling/run-quality-suite.sh --check` to validate security scanners, linters, and tests.
+- If operating on an automated update branch (e.g., `chore/pinact`, `dependabot/*`, `chore/autofix/*`), follow the instructions in `AGENT_RULES.md` and ensure the quality suite passes before finalizing work.

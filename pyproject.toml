@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "brain-radio"
+version = "0.1.0"
+description = "Brain-Radio: autonomous agentic Spotify playlist curator."
+readme = "docs/PRD.md"
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph>=0.2.0",
+    "pydantic>=2.6.0",
+    "typer>=0.12.0",
+]
+
+[project.optional-dependencies]
+research = ["duckduckgo-search>=5.3.0"]
+test = ["pytest>=8.0.0", "ruff>=0.5.0"]
+
+[project.scripts]
+brain-radio = "brain_radio.main:app"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

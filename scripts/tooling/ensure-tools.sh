@@ -91,8 +91,16 @@ ensure_zizmor() {
   uv tool install zizmor
 }
 
+ensure_bandit() {
+  if command -v bandit >/dev/null 2>&1; then
+    return
+  fi
+  uv tool install bandit
+}
+
 ensure_pinact
 ensure_actionlint
 ensure_shellcheck
 ensure_trivy
 ensure_zizmor
+ensure_bandit

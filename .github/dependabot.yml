@@ -6,20 +6,30 @@ updates:
       interval: "daily"
       time: "04:00"
       timezone: "UTC"
-    open-pull-requests-limit: 20
+    open-pull-requests-limit: 25
     labels:
       - "dependencies"
       - "security"
+      - "high-paranoia"
     allow:
       - dependency-type: "all"
     versioning-strategy: "increase-if-necessary"
+    rebase-strategy: "auto"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "daily"
       time: "04:30"
       timezone: "UTC"
-    open-pull-requests-limit: 20
+    open-pull-requests-limit: 25
     labels:
       - "dependencies"
       - "security"
+      - "high-paranoia"
+    rebase-strategy: "auto"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
