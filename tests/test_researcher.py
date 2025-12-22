@@ -1,5 +1,7 @@
 """Tests for Researcher Agent (Hybrid Verifier)."""
 
+from unittest.mock import patch
+
 import pytest
 
 from brain_radio.agents.researcher import ResearcherAgent
@@ -52,6 +54,7 @@ def instrumental_track():
         speechiness=0.05,
         instrumentalness=0.95,
         is_instrumental=True,
+        bpm=130.0,  # Valid BPM for Focus mode (120-140 range)
         source="spotify_features",
     )
 
@@ -200,3 +203,375 @@ async def test_bpm_range_enforcement(researcher_agent, focus_constraints):
 
     result_good = await researcher_agent.verify_track(track_good, focus_constraints)
     assert result_good.approved, "Track with BPM in range should be approved"
+
+
+@pytest.mark.asyncio
+async def test_energy_constraints(researcher_agent):
+    """Test energy constraint enforcement."""
+    constraints = ProtocolConstraints(
+        mode=Mode.FOCUS,
+        tempo_min=120.0,
+        tempo_max=140.0,
+        energy_min=0.3,
+        energy_max=0.7,
+        no_vocals=True,
+    )
+
+    # Track with energy too low
+    track_low_energy = TrackMetadata(
+        spotify_id="test1",
+        spotify_uri="spotify:track:test1",
+        name="Low Energy Track",
+        artist="Test",
+        energy=0.2,
+        is_instrumental=True,
+        bpm=130.0,
+        source="spotify_features",
+    )
+
+    result = await researcher_agent.verify_track(track_low_energy, constraints)
+    assert not result.approved, "Track with energy below minimum should be rejected"
+    assert any("below minimum" in reason.lower() for reason in result.reasons)
+
+    # Track with energy too high
+    track_high_energy = TrackMetadata(
+        spotify_id="test2",
+        spotify_uri="spotify:track:test2",
+        name="High Energy Track",
+        artist="Test",
+        energy=0.8,
+        is_instrumental=True,
+        bpm=130.0,
+        source="spotify_features",
+    )
+
+    result = await researcher_agent.verify_track(track_high_energy, constraints)
+    assert not result.approved, "Track with energy above maximum should be rejected"
+    assert any("above maximum" in reason.lower() for reason in result.reasons)
+
+    # Track with energy in range
+    track_good_energy = TrackMetadata(
+        spotify_id="test3",
+        spotify_uri="spotify:track:test3",
+        name="Good Energy Track",
+        artist="Test",
+        energy=0.5,
+        is_instrumental=True,
+        bpm=130.0,
+        source="spotify_features",
+    )
+
+    result = await researcher_agent.verify_track(track_good_energy, constraints)
+    assert result.approved, "Track with energy in range should be approved"
+
+
+@pytest.mark.asyncio
+async def test_bpm_research_failure(researcher_agent, focus_constraints):
+    """Test BPM research when search fails."""
+    track = TrackMetadata(
+        spotify_id="test123",
+        spotify_uri="spotify:track:test123",
+        name="Unknown Track",
+        artist="Unknown Artist",
+        bpm=None,
+        is_instrumental=True,
+        source="spotify_features",
+    )
+
+    # Mock search tool to fail
+    with patch.object(researcher_agent, "search_tool", side_effect=Exception("Search failed")):
+        result = await researcher_agent.verify_track(track, focus_constraints)
+        assert not result.approved
+        assert "Could not determine BPM" in result.reasons[0]
+
+
+def test_extract_bpm_from_text(researcher_agent):
+    """Test BPM extraction from text."""
+    # Test various BPM patterns
+    test_cases = [
+        ("The track is 120 BPM", 120.0),
+        ("BPM: 140", 140.0),
+        ("tempo: 130", 130.0),
+        ("Track has 125 bpm", 125.0),
+        ("No BPM here", None),
+        ("BPM: 250", None),  # Out of range
+        ("BPM: 50", None),  # Out of range
+    ]
+
+    for text, expected in test_cases:
+        result = researcher_agent._extract_bpm_from_text(text)
+        assert result == expected, f"Failed for text: {text}"
+
+
+def test_is_instrumental(researcher_agent):
+    """Test instrumental detection logic."""
+    # Track with is_instrumental set
+    track1 = TrackMetadata(
+        spotify_id="test1",
+        spotify_uri="spotify:track:test1",
+        name="Track",
+        artist="Artist",
+        is_instrumental=True,
+        source="spotify_features",
+    )
+    assert researcher_agent._is_instrumental(track1) is True
+
+    # Track with high instrumentalness
+    track2 = TrackMetadata(
+        spotify_id="test2",
+        spotify_uri="spotify:track:test2",
+        name="Track",
+        artist="Artist",
+        instrumentalness=0.8,
+        source="spotify_features",
+    )
+    assert researcher_agent._is_instrumental(track2) is True
+
+    # Track with low speechiness
+    track3 = TrackMetadata(
+        spotify_id="test3",
+        spotify_uri="spotify:track:test3",
+        name="Track",
+        artist="Artist",
+        speechiness=0.2,
+        source="spotify_features",
+    )
+    assert researcher_agent._is_instrumental(track3) is True
+
+    # Track with high speechiness
+    track4 = TrackMetadata(
+        spotify_id="test4",
+        spotify_uri="spotify:track:test4",
+        name="Track",
+        artist="Artist",
+        speechiness=0.5,
+        source="spotify_features",
+    )
+    assert researcher_agent._is_instrumental(track4) is False
+
+    # Track with no data
+    track5 = TrackMetadata(
+        spotify_id="test5",
+        spotify_uri="spotify:track:test5",
+        name="Track",
+        artist="Artist",
+        source="spotify_features",
+    )
+    assert researcher_agent._is_instrumental(track5) is False
+
+
+def test_calculate_distraction_score(researcher_agent):
+    """Test distraction score calculation."""
+    # High distraction track
+    high_distraction = TrackMetadata(
+        spotify_id="test1",
+        spotify_uri="spotify:track:test1",
+        name="High Distraction",
+        artist="Test",
+        speechiness=0.8,
+        instrumentalness=0.1,
+        energy=0.9,
+        explicit=True,
+        source="spotify_features",
+    )
+    score = researcher_agent._calculate_distraction_score(high_distraction)
+    assert score > 0.5, "High distraction track should have high score"
+
+    # Low distraction track
+    low_distraction = TrackMetadata(
+        spotify_id="test2",
+        spotify_uri="spotify:track:test2",
+        name="Low Distraction",
+        artist="Test",
+        speechiness=0.05,
+        instrumentalness=0.95,
+        energy=0.3,
+        explicit=False,
+        source="spotify_features",
+    )
+    score = researcher_agent._calculate_distraction_score(low_distraction)
+    assert score < 0.5, "Low distraction track should have low score"
+    assert score <= 1.0, "Score should be capped at 1.0"
+
+
+@pytest.mark.asyncio
+async def test_distraction_score_above_threshold(researcher_agent, focus_constraints):
+    """Test that tracks with high distraction score are rejected (line 147)."""
+    # Create an instrumental track with high distraction score
+    high_distraction_track = TrackMetadata(
+        spotify_id="test1",
+        spotify_uri="spotify:track:test1",
+        name="High Distraction Track",
+        artist="Test",
+        speechiness=0.8,
+        instrumentalness=0.95,  # Instrumental so it passes vocal check
+        energy=0.95,
+        is_instrumental=True,
+        bpm=130.0,
+        source="spotify_features",
+    )
+
+    result = await researcher_agent.verify_track(high_distraction_track, focus_constraints)
+    # Should be rejected for high distraction score (line 147)
+    assert not result.approved
+    assert result.distraction_score is not None
+    assert any("Distraction score" in reason for reason in result.reasons)
+
+
+@pytest.mark.asyncio
+async def test_non_focus_mode_no_distraction_score(researcher_agent):
+    """Test that distraction score is only calculated for Focus mode."""
+    relax_constraints = ProtocolConstraints(
+        mode=Mode.RELAX,
+        tempo_min=60.0,
+        tempo_max=90.0,
+        no_vocals=False,
+    )
+
+    track = TrackMetadata(
+        spotify_id="test1",
+        spotify_uri="spotify:track:test1",
+        name="Relax Track",
+        artist="Test",
+        bpm=75.0,
+        source="spotify_features",
+    )
+
+    result = await researcher_agent.verify_track(track, relax_constraints)
+    # Distraction score should be None for non-Focus modes
+    assert result.distraction_score is None
+
+
+@pytest.mark.asyncio
+async def test_bpm_research_with_ainvoke(researcher_agent, focus_constraints):
+    """Test BPM research using ainvoke method (lines 103-104)."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    track = TrackMetadata(
+        spotify_id="test123",
+        spotify_uri="spotify:track:test123",
+        name="Test Track",
+        artist="Test Artist",
+        bpm=None,
+        is_instrumental=True,
+        source="spotify_features",
+    )
+
+    # Mock search tool with ainvoke that returns valid BPM
+    mock_search_tool = MagicMock()
+    mock_search_tool.ainvoke = AsyncMock(return_value="Track has 130 BPM tempo")
+    # Ensure hasattr returns True
+    type(mock_search_tool).ainvoke = mock_search_tool.ainvoke
+    researcher_agent.search_tool = mock_search_tool
+
+    result = await researcher_agent.verify_track(track, focus_constraints)
+
+    # BPM should be extracted and source set to external_fallback (lines 103-104)
+    assert result.track.bpm is not None, "BPM should be extracted from search"
+    assert 120 <= result.track.bpm <= 140, f"BPM {result.track.bpm} should be in range"
+    assert result.track.source == "external_fallback", "Source should be external_fallback after research"
+
+
+@pytest.mark.asyncio
+async def test_bpm_research_with_sync_invoke(researcher_agent, focus_constraints):
+    """Test BPM research using sync invoke in thread."""
+    from unittest.mock import MagicMock
+
+    track = TrackMetadata(
+        spotify_id="test123",
+        spotify_uri="spotify:track:test123",
+        name="Test Track",
+        artist="Test Artist",
+        bpm=None,
+        is_instrumental=True,
+        source="spotify_features",
+    )
+
+    # Mock search tool without ainvoke (sync only)
+    mock_search_tool = MagicMock()
+    # Don't set ainvoke attribute
+    mock_search_tool.invoke = MagicMock(return_value="Track tempo is 135 BPM")
+    # Make hasattr return False for ainvoke
+    if hasattr(type(mock_search_tool), "ainvoke"):
+        delattr(type(mock_search_tool), "ainvoke")
+    researcher_agent.search_tool = mock_search_tool
+
+    result = await researcher_agent.verify_track(track, focus_constraints)
+
+    # BPM should be extracted if search worked
+    if result.track.bpm is not None:
+        assert 120 <= result.track.bpm <= 140
+        assert result.track.source == "external_fallback"
+
+
+@pytest.mark.asyncio
+async def test_bpm_research_exception_handling(researcher_agent, focus_constraints):
+    """Test BPM research handles exceptions gracefully (lines 193-198)."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    track = TrackMetadata(
+        spotify_id="test123",
+        spotify_uri="spotify:track:test123",
+        name="Test Track",
+        artist="Test Artist",
+        bpm=None,
+        is_instrumental=True,
+        source="spotify_features",
+    )
+
+    # Mock search tool to raise exception
+    mock_search_tool = MagicMock()
+    mock_search_tool.ainvoke = AsyncMock(side_effect=Exception("Search failed"))
+    researcher_agent.search_tool = mock_search_tool
+
+    result = await researcher_agent.verify_track(track, focus_constraints)
+
+    # Should reject due to missing BPM
+    assert not result.approved
+    assert any("Could not determine BPM" in reason for reason in result.reasons)
+
+    # Test exception in sync invoke path
+    mock_search_tool2 = MagicMock()
+    if hasattr(mock_search_tool2, "ainvoke"):
+        delattr(mock_search_tool2, "ainvoke")
+    mock_search_tool2.invoke = MagicMock(side_effect=Exception("Sync search failed"))
+    researcher_agent.search_tool = mock_search_tool2
+
+    result2 = await researcher_agent.verify_track(track, focus_constraints)
+    assert not result2.approved
+
+
+def test_extract_bpm_edge_cases(researcher_agent):
+    """Test BPM extraction with edge cases."""
+    # Test with multiple BPM values (should use first)
+    text = "Track has 120 BPM and also 140 BPM mentioned"
+    result = researcher_agent._extract_bpm_from_text(text)
+    assert result == 120.0
+
+    # Test with invalid BPM (out of range)
+    text = "Track has 300 BPM"  # Too high
+    result = researcher_agent._extract_bpm_from_text(text)
+    assert result is None
+
+    text = "Track has 20 BPM"  # Too low
+    result = researcher_agent._extract_bpm_from_text(text)
+    assert result is None
+
+    # Test with no BPM
+    text = "This track has no tempo information"
+    result = researcher_agent._extract_bpm_from_text(text)
+    assert result is None
+
+    # Test with case insensitive
+    text = "bpm: 125"
+    result = researcher_agent._extract_bpm_from_text(text)
+    assert result == 125.0
+
+    # Test ValueError exception handling (lines 222-223)
+    # Create text that will cause ValueError in float conversion
+    # We need to mock re.findall to return invalid data
+    from unittest.mock import patch
+    with patch("brain_radio.agents.researcher.re.findall") as mock_findall:
+        mock_findall.return_value = ["invalid_bpm"]  # Will cause ValueError
+        result = researcher_agent._extract_bpm_from_text("test")
+        assert result is None  # Should return None on ValueError

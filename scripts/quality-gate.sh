@@ -133,7 +133,7 @@ docker-compose --profile test run --rm test python -m ruff format --check . || {
 # Pytest - run tests with coverage in Docker
 echo "Running tests in Docker container..."
 mkdir -p coverage
-if "${ROOT_DIR}/scripts/test-docker.sh" docker-compose.yml --cov=src/brain_radio --cov-report=term-missing --cov-report=xml --cov-report=html -v; then
+if "${ROOT_DIR}/scripts/test-docker.sh" docker-compose.yml --cov=src/brain_radio --cov-report=term-missing --cov-report=xml:coverage/coverage.xml --cov-report=html:coverage/htmlcov -v; then
   echo "Tests passed"
 else
   echo "ERROR: Tests failed"
@@ -145,12 +145,12 @@ echo "Checking test coverage..."
 COVERAGE_THRESHOLD=95
 COVERAGE_XML="${ROOT_DIR}/coverage/coverage.xml"
 if [ -f "${COVERAGE_XML}" ]; then
-  COVERAGE=$(python -c "import xml.etree.ElementTree as ET; tree = ET.parse('${COVERAGE_XML}'); root = tree.getroot(); print(root.attrib.get('line-rate', '0'))" 2>/dev/null || echo "0")
-  COVERAGE_PCT=$(python -c "print(int(float('${COVERAGE}') * 100))" 2>/dev/null || echo "0")
+  COVERAGE=$(python3 -c "import xml.etree.ElementTree as ET; import os; tree = ET.parse('${COVERAGE_XML}'); root = tree.getroot(); print(root.attrib.get('line-rate', '0'))" 2>/dev/null || echo "0")
+  COVERAGE_PCT=$(python3 -c "print(int(float('${COVERAGE}') * 100))" 2>/dev/null || echo "0")
 else
   # Try to get coverage from container
-  COVERAGE=$(docker-compose --profile test run --rm test python -c "import xml.etree.ElementTree as ET; tree = ET.parse('coverage.xml'); root = tree.getroot(); print(root.attrib.get('line-rate', '0'))" 2>/dev/null || echo "0")
-  COVERAGE_PCT=$(python -c "print(int(float('${COVERAGE}') * 100))" 2>/dev/null || echo "0")
+  COVERAGE=$(docker-compose --profile test run --rm test python -c "import xml.etree.ElementTree as ET; tree = ET.parse('coverage/coverage.xml'); root = tree.getroot(); print(root.attrib.get('line-rate', '0'))" 2>/dev/null || echo "0")
+  COVERAGE_PCT=$(python3 -c "print(int(float('${COVERAGE}') * 100))" 2>/dev/null || echo "0")
 fi
 
 if [ "${COVERAGE_PCT}" -lt "${COVERAGE_THRESHOLD}" ]; then

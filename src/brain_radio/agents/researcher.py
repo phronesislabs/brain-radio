@@ -45,6 +45,11 @@ class ResearcherAgent:
         reasons: list[str] = []
         confidence = 1.0
 
+        # Calculate distraction score for Focus mode (even for rejected tracks)
+        distraction_score = None
+        if constraints.mode == Mode.FOCUS:
+            distraction_score = self._calculate_distraction_score(track)
+
         # Check hard bans first
         if constraints.no_vocals and not self._is_instrumental(track):
             return VerificationResult(
@@ -52,6 +57,7 @@ class ResearcherAgent:
                 approved=False,
                 confidence=1.0,
                 reasons=["Contains vocals - violates protocol constraint"],
+                distraction_score=distraction_score,
             )
 
         if constraints.avoid_live and track.is_live:
@@ -60,6 +66,7 @@ class ResearcherAgent:
                 approved=False,
                 confidence=1.0,
                 reasons=["Live version - violates protocol constraint"],
+                distraction_score=distraction_score,
             )
 
         if constraints.avoid_remaster and track.is_remaster:
@@ -68,6 +75,7 @@ class ResearcherAgent:
                 approved=False,
                 confidence=1.0,
                 reasons=["Remastered version - violates protocol constraint"],
+                distraction_score=distraction_score,
             )
 
         if constraints.avoid_feat and track.has_feat:
@@ -76,6 +84,7 @@ class ResearcherAgent:
                 approved=False,
                 confidence=1.0,
                 reasons=["Featured artists - violates protocol constraint"],
+                distraction_score=distraction_score,
             )
 
         # Verify BPM if required
@@ -132,10 +141,8 @@ class ResearcherAgent:
                     reasons=[f"Energy {track.energy} above maximum {constraints.energy_max}"],
                 )
 
-        # Calculate distraction score for Focus mode
-        distraction_score = None
-        if constraints.mode == Mode.FOCUS:
-            distraction_score = self._calculate_distraction_score(track)
+        # Check distraction score threshold for Focus mode
+        if constraints.mode == Mode.FOCUS and distraction_score is not None:
             if distraction_score > DISTRACTION_SCORE_REJECTION_THRESHOLD:
                 return VerificationResult(
                     track=track,

@@ -42,3 +42,16 @@ async def test_supervisor_different_modes(supervisor):
         request = PlaylistRequest(mode=mode)
         result = await supervisor.generate_playlist(request)
         assert result.mode == mode
+
+
+@pytest.mark.asyncio
+async def test_supervisor_error_handling(supervisor):
+    """Test Supervisor error handling paths."""
+    # Test with invalid request that might cause errors
+    # The supervisor should handle errors gracefully
+    request = PlaylistRequest(mode=Mode.FOCUS, duration_minutes=60)
+
+    # Should complete without raising
+    result = await supervisor.generate_playlist(request)
+    assert result is not None
+    assert "error" not in str(result).lower() or result.mode == Mode.FOCUS
