@@ -1,0 +1,64 @@
+---
+description: Guidelines for writing and maintaining documentation, including mandatory use of bash commands for timestamps.
+globs: **/*.md, **/*.mdx, **/README*, **/CHANGELOG*, **/HISTORY*, docs/**/*
+alwaysApply: true
+---
+
+- **Timestamp Generation (MANDATORY)**
+  - **NEVER assume or guess the current date or year**
+  - **ALWAYS use bash commands to generate timestamps** when writing documentation
+  - Agents often get the year wrong, which is unacceptable
+  - Use `date` command or similar to get accurate timestamps
+
+- **Correct Timestamp Usage:**
+  ```bash
+  # ✅ DO: Use bash command to get current date
+  date +"%Y-%m-%d"
+  # Output: 2025-12-19 (example)
+  
+  # ✅ DO: Use bash command for formatted dates
+  date +"%B %d, %Y"
+  # Output: December 19, 2025 (example)
+  
+  # ✅ DO: Use bash command for ISO 8601 format
+  date -u +"%Y-%m-%dT%H:%M:%SZ"
+  # Output: 2025-12-19T14:30:00Z (example)
+  ```
+
+- **Incorrect Timestamp Usage:**
+  ```markdown
+  # ❌ DON'T: Hardcode dates or assume current date
+  Last updated: December 19, 2023
+  
+  # ❌ DON'T: Use your knowledge of the date
+  Created: 2025-01-15
+  
+  # ❌ DON'T: Guess the year
+  Updated: 2023-12-19
+  ```
+
+- **When Writing Documentation:**
+  - **Before adding any date or timestamp**, run `date` command to get the accurate current date
+  - Use the output from the command directly in the documentation
+  - For changelogs or version history, always verify dates using bash commands
+  - When updating existing documentation with dates, regenerate timestamps using bash commands
+
+- **Examples of Required Workflow:**
+  ```bash
+  # Step 1: Get current date before writing
+  date +"%Y-%m-%d"
+  
+  # Step 2: Use the output in documentation
+  # Last updated: 2025-12-19
+  ```
+
+- **Documentation Best Practices:**
+  - Keep documentation clear and up-to-date
+  - Use consistent date formats across all documentation
+  - Prefer ISO 8601 format (YYYY-MM-DD) for dates in technical documentation
+  - Include timestamps in changelogs, README updates, and version history
+  - Always verify dates using system commands, never assume
+
+- **Related Rules:**
+  - Follow [cursor_rules.mdc](mdc:.cursor/rules/cursor_rules.mdc) for rule formatting
+  - Follow [clean_code.mdc](mdc:.cursor/rules/clean_code.mdc) for code quality standards

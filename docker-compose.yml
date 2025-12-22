@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: brain-radio-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
+      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
+      - SPOTIFY_REDIRECT_URI=${SPOTIFY_REDIRECT_URI:-http://localhost:8000/api/auth/callback}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+    volumes:
+      - ./src:/app/src
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: brain-radio-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    environment:
+      - BACKEND_URL=http://backend:8000
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: brain-radio-test
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./coverage:/app/coverage
+      - ./.checks:/app/.checks:ro
+      - ./.github:/app/.github:ro
+      - ./scripts:/app/scripts:ro
+    environment:
+      - PYTEST_CURRENT_TEST=${PYTEST_CURRENT_TEST:-}
+    profiles:
+      - test
+    command: sh -c "pytest --cov=src/brain_radio --cov-report=term-missing --cov-report=xml:coverage/coverage.xml --cov-report=html:coverage/htmlcov -v"
+

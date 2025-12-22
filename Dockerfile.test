@@ -1,0 +1,46 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies including curl and tools needed for quality checks
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    gcc \
+    curl \
+    bash \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv for package management (version managed by project requirements)
+# hadolint ignore=DL3013
+RUN pip install --no-cache-dir uv
+
+# Copy dependency files
+COPY pyproject.toml setup.py ./
+COPY src/ ./src/
+# Note: tests/ is excluded by .dockerignore but mounted as volume in docker-compose
+
+# Install Python dependencies including dev dependencies
+RUN uv pip install --system --no-cache -e ".[dev]"
+
+# Copy .checks directory for tool setup scripts
+COPY .checks/ ./.checks/
+
+# Install quality check tools during build
+# The setup-tools.sh script will install shellcheck, actionlint, etc.
+# We need to set ROOT_DIR explicitly to /app so tools go to /app/.tools/bin
+# hadolint ignore=DL3003
+RUN chmod +x .checks/scripts/tooling/setup-tools.sh && \
+    cd /app && \
+    ROOT_DIR=/app TOOLS_DIR=/app/.tools BIN_DIR=/app/.tools/bin \
+    bash .checks/scripts/tooling/setup-tools.sh || echo "Warning: Some tools may not have installed"
+
+# Add tools to PATH
+ENV PATH="/app/.tools/bin:/app/.checks/.tools/bin:/root/.local/bin:${PATH}"
+
+# Create non-root user (must be after tool installation to allow root access during build)
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+
+# Default command runs tests
+CMD ["pytest", "--cov=src/brain_radio", "--cov-report=term-missing", "--cov-report=xml", "-v"]
+

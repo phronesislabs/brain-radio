@@ -1,0 +1,175 @@
+.spotify-player {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-top: 2rem;
+}
+
+.player-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.player-title {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.player-info {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.player-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.control-button {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.control-button:hover:not(:disabled) {
+  background: var(--accent-primary);
+  transform: scale(1.1);
+}
+
+.control-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.play-pause-button {
+  width: 80px;
+  height: 80px;
+  font-size: 2rem;
+  background: var(--accent-primary);
+}
+
+.play-pause-button:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.current-track {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+}
+
+.track-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.track-name {
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+.track-artist {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin: 0;
+}
+
+.track-album {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.player-loading,
+.premium-required {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+.premium-note {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.playlist-tracks {
+  margin-top: 2rem;
+}
+
+.tracks-title {
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tracks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.track-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.track-item:hover {
+  background: var(--bg-secondary);
+}
+
+.track-item.current {
+  border: 2px solid var(--accent-primary);
+  background: rgba(29, 185, 84, 0.1);
+}
+
+.track-number {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  min-width: 30px;
+  text-align: right;
+}
+
+.track-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.track-name-text {
+  font-weight: 500;
+}
+
+.track-artist-text {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.track-bpm {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
