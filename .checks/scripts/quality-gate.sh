@@ -76,6 +76,7 @@ TOOL_PYTEST=$(load_config ".quality_gate.tools.pytest" "true")
 TOOL_MYPY=$(load_config ".quality_gate.tools.mypy" "false")
 TOOL_BANDIT=$(load_config ".quality_gate.tools.bandit" "false")
 TOOL_PIP_AUDIT=$(load_config ".quality_gate.tools.pip_audit" "false")
+TOOL_NPM=$(load_config ".quality_gate.tools.npm" "true")
 
 # Install project dependencies if Python is enabled
 if [ "${PYTHON_ENABLED}" = "true" ] && [ -f pyproject.toml ]; then
@@ -148,6 +149,16 @@ if [ "${TOOL_HADOLINT}" = "true" ] && [ "${DOCKER_ENABLED}" = "true" ]; then
                 exit 1
             }
         done
+    fi
+    
+    # Test that Dockerfiles actually build
+    if [ -f "${ROOT_DIR}/scripts/test-docker-builds.sh" ]; then
+        echo ""
+        echo "Testing Dockerfile builds..."
+        "${ROOT_DIR}/scripts/test-docker-builds.sh" || {
+            echo "ERROR: Docker build test failed"
+            exit 1
+        }
     fi
 fi
 
@@ -248,6 +259,49 @@ if [ "${TOOL_PIP_AUDIT}" = "true" ] && [ "${PYTHON_ENABLED}" = "true" ]; then
     docker-compose build test >/dev/null 2>&1 || true
     docker-compose --profile test run --rm test sh -c "uv pip install --system pip-audit >/dev/null 2>&1 && pip-audit --desc --format json --output pip-audit-report.json" || {
         echo "ERROR: pip-audit found vulnerabilities"
+        exit 1
+    }
+fi
+
+# npm dependency checks
+if [ "${TOOL_NPM}" = "true" ]; then
+    check_npm_dependencies() {
+        if [ -f "frontend/package.json" ]; then
+            echo "Checking npm dependencies..."
+            cd frontend || return 0
+            
+            # Check if node_modules exists, if not install dependencies
+            if [ ! -d "node_modules" ]; then
+                echo "Installing npm dependencies..."
+                npm ci >/dev/null 2>&1 || npm install >/dev/null 2>&1 || {
+                    echo "WARNING: Failed to install npm dependencies, skipping checks"
+                    cd ..
+                    return 0
+                }
+            fi
+            
+            # Check for deprecated packages
+            if npm outdated 2>&1 | grep -q "deprecated"; then
+                echo "WARNING: npm found deprecated packages:"
+                npm outdated 2>&1 | grep "deprecated" || true
+            fi
+            
+            # Check for vulnerabilities (moderate or higher)
+            if ! npm audit --audit-level=moderate --dry-run >/dev/null 2>&1; then
+                echo "ERROR: npm audit found moderate or higher severity vulnerabilities"
+                npm audit --audit-level=moderate
+                cd ..
+                return 1
+            fi
+            
+            cd ..
+        fi
+        return 0
+    }
+
+    # Run npm dependency checks
+    check_npm_dependencies || {
+        echo "ERROR: npm dependency checks failed"
         exit 1
     }
 fi

@@ -230,14 +230,22 @@ run_linters() {
     # Ruff (Python)
     if command -v ruff >/dev/null 2>&1 || (command -v uv >/dev/null 2>&1 && uv pip install --system ruff >/dev/null 2>&1); then
         log_info "  Running ruff..."
+        local ruff_check_status=0
+        local ruff_format_status=0
+        
         if [ "${AUTO_FIX}" = "true" ]; then
-            python -m ruff check --fix . 2>&1 | tee ruff-check-report.txt || true
-            python -m ruff format . 2>&1 | tee ruff-format-report.txt || true
+            python -m ruff check --fix . 2>&1 | tee ruff-check-report.txt
+            ruff_check_status=${PIPESTATUS[0]}
+            python -m ruff format . 2>&1 | tee ruff-format-report.txt
+            ruff_format_status=${PIPESTATUS[0]}
         else
-            python -m ruff check . 2>&1 | tee ruff-check-report.txt || true
-            python -m ruff format --check . 2>&1 | tee ruff-format-report.txt || true
+            python -m ruff check . 2>&1 | tee ruff-check-report.txt
+            ruff_check_status=${PIPESTATUS[0]}
+            python -m ruff format --check . 2>&1 | tee ruff-format-report.txt
+            ruff_format_status=${PIPESTATUS[0]}
         fi
-        if [ "${PIPESTATUS[0]}" -eq 0 ] && [ "${PIPESTATUS[1]}" -eq 0 ]; then
+        
+        if [ "${ruff_check_status}" -eq 0 ] && [ "${ruff_format_status}" -eq 0 ]; then
             log_success "  ruff passed"
         else
             log_error "  ruff found issues"

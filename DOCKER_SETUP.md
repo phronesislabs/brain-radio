@@ -23,7 +23,7 @@ The Brain-Radio application has been fully dockerized to provide a production-li
   - `GET /api/config/openai/status` - Check if key is configured
 - **Frontend UI**: 
   - Modal dialog prompts for OpenAI API key on first use
-  - Settings button (⚙️) in header to update API key
+  - Settings button (gear icon) in header to update API key
   - Validation and error handling
 
 ### 4. Security Improvements
@@ -44,7 +44,7 @@ The Brain-Radio application has been fully dockerized to provide a production-li
 # Set required environment variables
 export SPOTIFY_CLIENT_ID="your_client_id"
 export SPOTIFY_CLIENT_SECRET="your_client_secret"
-export SPOTIFY_REDIRECT_URI="http://localhost:8000/api/auth/callback"
+export SPOTIFY_REDIRECT_URI="http://127.0.0.1:8000/api/auth/callback"
 
 # Run with Docker Compose
 docker-compose up --build

@@ -17,7 +17,7 @@ def test_unknown_mode_raises_error(composer):
     # Create a mock mode that doesn't exist in the enum
     # Since Mode is an enum, we can't easily create an invalid one
     # But we can test the else clause by checking the code structure
-    
+
     # The else clause at line 85 should raise ValueError for unknown modes
     # Since we can't create an invalid Mode enum value easily,
     # we'll verify the error message format
@@ -34,4 +34,3 @@ def test_unknown_mode_raises_error(composer):
     for mode in [Mode.FOCUS, Mode.RELAX, Mode.SLEEP, Mode.MEDITATION]:
         constraints = composer.compose_constraints(mode)
         assert constraints.mode == mode
-

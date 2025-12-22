@@ -133,7 +133,7 @@ function App() {
             {!isPremium && (
               <div className="premium-warning">
                 <p>
-                  ⚠️ Spotify Premium is required for in-browser playback.
+                  <strong>Note:</strong> Spotify Premium is required for in-browser playback.
                   Playlists can still be generated and saved to your Spotify account.
                 </p>
               </div>
@@ -142,7 +142,7 @@ function App() {
             {!hasOpenAIKey && (
               <div className="openai-warning">
                 <p>
-                  ⚠️ OpenAI API key is required to generate playlists.
+                  <strong>Required:</strong> OpenAI API key is required to generate playlists.
                   <button
                     className="link-button"
                     onClick={() => setShowOpenAIModal(true)}

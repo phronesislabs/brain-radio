@@ -3,7 +3,7 @@
 
 set -e
 
-echo "🚀 Starting Brain-Radio Development Environment"
+echo "Starting Brain-Radio Development Environment"
 echo ""
 
 # Check if .env exists
@@ -19,14 +19,14 @@ if [ ! -f .env ]; then
 fi
 
 # Check Python dependencies
-echo "📦 Checking Python dependencies..."
+echo "Checking Python dependencies..."
 if ! python -c "import fastapi" 2>/dev/null; then
     echo "Installing Python dependencies..."
     uv pip install -e ".[dev]"
 fi
 
 # Check Node dependencies
-echo "📦 Checking Node dependencies..."
+echo "Checking Node dependencies..."
 if [ ! -d "frontend/node_modules" ]; then
     echo "Installing frontend dependencies..."
     cd frontend

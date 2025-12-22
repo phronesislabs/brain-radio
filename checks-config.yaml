@@ -36,6 +36,7 @@ quality_gate:
     mypy: true
     bandit: true
     pip_audit: true
+    npm: true
 
 pre_commit:
   enabled: true

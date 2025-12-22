@@ -1,21 +1,22 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
 # Copy package files
 COPY package.json ./
+COPY package-lock.json* ./
 
 # Install dependencies
-RUN npm ci
+# Use npm install if package-lock.json doesn't exist, npm ci if it does
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
 # Copy source files
 COPY . .
 
-# Create non-root user
-RUN addgroup -g 1000 appuser && \
-    adduser -D -u 1000 -G appuser appuser && \
-    chown -R appuser:appuser /app
-USER appuser
+# node:20-alpine already has a 'node' user with UID 1000
+# Use that user instead of creating a new one
+RUN chown -R node:node /app
+USER node
 
 EXPOSE 3000
 

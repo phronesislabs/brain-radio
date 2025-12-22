@@ -8,6 +8,95 @@ alwaysApply: true
 
 This rule enforces Robert C. Martin's Clean Code principles across the codebase. Reference: "Clean Code: A Handbook of Agile Software Craftsmanship" by Robert C. Martin.
 
+## Clean Code Journaling (MANDATORY)
+
+**All agents applying clean code principles MUST maintain a markdown journal file documenting their work.**
+
+### Purpose
+
+Journaling ensures consistent application of clean code principles across sessions, preventing deviation due to context window limitations or memory decay. The journal serves as a persistent record of decisions, evaluations, and evidence that can be referenced in future sessions.
+
+### Journal Requirements
+
+- **File Location**: Maintain a markdown file (e.g., `CLEAN_CODE_JOURNAL.md` in the project root or `docs/CLEAN_CODE_JOURNAL.md`)
+- **Update Frequency**: Update the journal **during** the application of clean code principles, not after
+- **Completeness**: Every clean code rule addressed must be documented
+
+### Required Journal Entries
+
+For each clean code rule being addressed, the journal MUST include:
+
+1. **Rule Identification**
+   - Which clean code principle/rule is being applied
+   - Section reference (e.g., "Meaningful Names - Use Intention-Revealing Names")
+
+2. **Context and Evaluation**
+   - What code or pattern is being evaluated
+   - Why the rule applies (or doesn't apply) in this context
+   - Decision rationale: what was considered and why a particular approach was chosen
+
+3. **Corrective Actions**
+   - Specific changes made to address the rule
+   - Before/after code comparisons when applicable
+   - Files modified and line numbers affected
+
+4. **Evidence**
+   - Code snippets with line/block citations using the format: `startLine:endLine:filepath`
+   - Logs or test results that demonstrate compliance
+   - Written explanations that cite specific lines or blocks of code
+   - Before/after examples showing improvement
+
+### Journal Entry Format
+
+```markdown
+## [Date] - [Rule Category]: [Specific Rule]
+
+### Context
+
+- **File(s)**: `path/to/file.py`
+- **Issue**: Description of the clean code violation or improvement opportunity
+
+### Evaluation
+
+- **Rule Applied**: [Specific clean code principle]
+- **Decision**: [What was decided and why]
+- **Alternatives Considered**: [Other approaches evaluated]
+
+### Actions Taken
+
+- **Changes Made**: [Specific modifications]
+- **Code References**:
+
+  ```startLine:endLine:path/to/file.py
+  // Before code
+  ```
+
+  ```startLine:endLine:path/to/file.py
+  // After code
+  ```
+
+### Evidence
+
+- **Compliance**: [How compliance was verified]
+- **Test Results**: [If applicable]
+- **Code Quality Metrics**: [If applicable]
+
+```
+
+### Enforcement
+
+- **Mandatory**: Journaling is not optional. Code changes that address clean code principles without corresponding journal entries are incomplete.
+- **Verification**: Before considering clean code work complete, verify that all addressed rules are documented in the journal.
+- **Reference**: When continuing work in a new session, read the journal first to understand previous decisions and maintain consistency.
+
+### Benefits
+
+- **Consistency**: Ensures uniform application of principles across sessions
+- **Traceability**: Provides an audit trail of clean code improvements
+- **Knowledge Preservation**: Captures context and rationale that might be lost between sessions
+- **Evidence-Based**: Creates a record of proof that principles are being followed
+- **Learning**: Helps identify patterns and improve future application of clean code principles
+
 ## Meaningful Names
 
 - **Use Intention-Revealing Names**

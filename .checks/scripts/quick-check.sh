@@ -65,9 +65,9 @@ fi
 if [ "${TOOL_RUFF}" = "true" ] && [ "${PYTHON_ENABLED}" = "true" ]; then
     echo "Quick check: Python formatting..."
     if docker-compose -f "${COMPOSE_FILE}" --profile test run --rm test python -m ruff format --check . >/dev/null 2>&1; then
-        echo "  ✓ Python formatting OK"
+        echo "  [OK] Python formatting OK"
     else
-        echo "  ✗ Formatting issues detected. Run: docker-compose --profile test run --rm test python -m ruff format ."
+        echo "  [FAIL] Formatting issues detected. Run: docker-compose --profile test run --rm test python -m ruff format ."
         ERRORS=$((ERRORS + 1))
     fi
 fi
@@ -81,10 +81,10 @@ if [ "${TOOL_SHELLCHECK}" = "true" ]; then
         # Run shellcheck (tools are pre-installed in container)
         if docker-compose -f "${COMPOSE_FILE}" --profile test run --rm test bash -c "\
             export PATH=\"/app/.tools/bin:/app/.checks/.tools/bin:/root/.local/bin:\${PATH}\" && \
-            command -v shellcheck >/dev/null 2>&1 && shellcheck ${SHELL_FILES} >/dev/null 2>&1 || exit 0" 2>/dev/null; then
-            echo "  ✓ Shell scripts OK"
+            command -v shellcheck >/dev/null 2>&1 && shellcheck ${SHELL_FILES} >/dev/null 2>&1" 2>/dev/null; then
+            echo "  [OK] Shell scripts OK"
         else
-            echo "  ✗ Shell script issues detected. Run: docker-compose --profile test run --rm test shellcheck <file>"
+            echo "  [FAIL] Shell script issues detected. Run: docker-compose --profile test run --rm test shellcheck <file>"
             ERRORS=$((ERRORS + 1))
         fi
     fi
@@ -96,10 +96,10 @@ if [ "${TOOL_ACTIONLINT}" = "true" ] && [ -d .github/workflows ]; then
     # Run actionlint (tools are pre-installed in container)
     if docker-compose -f "${COMPOSE_FILE}" --profile test run --rm test bash -c "\
         export PATH=\"/app/.tools/bin:/app/.checks/.tools/bin:/root/.local/bin:\${PATH}\" && \
-        command -v actionlint >/dev/null 2>&1 && actionlint -no-color >/dev/null 2>&1 || exit 0" 2>/dev/null; then
-        echo "  ✓ GitHub Actions OK"
+        command -v actionlint >/dev/null 2>&1 && actionlint -no-color >/dev/null 2>&1" 2>/dev/null; then
+        echo "  [OK] GitHub Actions OK"
     else
-        echo "  ✗ GitHub Actions issues detected. Run: docker-compose --profile test run --rm test actionlint"
+        echo "  [FAIL] GitHub Actions issues detected. Run: docker-compose --profile test run --rm test actionlint"
         ERRORS=$((ERRORS + 1))
     fi
 fi
@@ -141,9 +141,9 @@ for root, dirs, files in os.walk('.'):
                 pass
 sys.exit(0)
 " 2>/dev/null; then
-    echo "  ✓ No emojis found"
+    echo "  [OK] No emojis found"
 else
-    echo "  ✗ Emojis detected in files (MANDATORY: must be removed)"
+    echo "  [FAIL] Emojis detected in files (MANDATORY: must be removed)"
     ERRORS=$((ERRORS + 1))
 fi
 

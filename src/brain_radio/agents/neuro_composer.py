@@ -1,5 +1,17 @@
 """Neuro-Composer Agent: Translates cognitive goals into strict constraints."""
 
+from brain_radio.agents.constants import (
+    FOCUS_MODE_MAX_ENERGY,
+    FOCUS_MODE_TEMPO_MAX,
+    FOCUS_MODE_TEMPO_MIN,
+    MEDITATION_MODE_MAX_ENERGY,
+    MEDITATION_MODE_TEMPO_MAX,
+    RELAX_MODE_MAX_ENERGY,
+    RELAX_MODE_TEMPO_MAX,
+    RELAX_MODE_TEMPO_MIN,
+    SLEEP_MODE_MAX_ENERGY,
+    SLEEP_MODE_TEMPO_MAX,
+)
 from brain_radio.models import Mode, ProtocolConstraints
 
 
@@ -24,10 +36,10 @@ class NeuroComposerAgent:
         if mode == Mode.FOCUS:
             return ProtocolConstraints(
                 mode=mode,
-                tempo_min=120.0,
-                tempo_max=140.0,
+                tempo_min=FOCUS_MODE_TEMPO_MIN,
+                tempo_max=FOCUS_MODE_TEMPO_MAX,
                 energy_min=None,
-                energy_max=0.7,  # Avoid high-intensity for Focus
+                energy_max=FOCUS_MODE_MAX_ENERGY,
                 no_vocals=True,
                 avoid_live=True,
                 avoid_remaster=True,
@@ -39,10 +51,10 @@ class NeuroComposerAgent:
         elif mode == Mode.RELAX:
             return ProtocolConstraints(
                 mode=mode,
-                tempo_min=60.0,
-                tempo_max=90.0,
+                tempo_min=RELAX_MODE_TEMPO_MIN,
+                tempo_max=RELAX_MODE_TEMPO_MAX,
                 energy_min=None,
-                energy_max=0.6,
+                energy_max=RELAX_MODE_MAX_ENERGY,
                 no_vocals=False,  # Relax allows vocals
                 avoid_live=False,
                 avoid_remaster=False,
@@ -55,9 +67,9 @@ class NeuroComposerAgent:
             return ProtocolConstraints(
                 mode=mode,
                 tempo_min=None,
-                tempo_max=60.0,
+                tempo_max=SLEEP_MODE_TEMPO_MAX,
                 energy_min=None,
-                energy_max=0.3,
+                energy_max=SLEEP_MODE_MAX_ENERGY,
                 no_vocals=False,  # Sleep can have soft vocals
                 avoid_live=True,
                 avoid_remaster=False,
@@ -70,9 +82,9 @@ class NeuroComposerAgent:
             return ProtocolConstraints(
                 mode=mode,
                 tempo_min=None,
-                tempo_max=70.0,
+                tempo_max=MEDITATION_MODE_TEMPO_MAX,
                 energy_min=None,
-                energy_max=0.4,
+                energy_max=MEDITATION_MODE_MAX_ENERGY,
                 no_vocals=True,  # Meditation avoids guided speech by default
                 avoid_live=True,
                 avoid_remaster=False,

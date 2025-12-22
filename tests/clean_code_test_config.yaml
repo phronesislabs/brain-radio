@@ -1,0 +1,68 @@
+project:
+  name: brain-radio
+  languages:
+  - python
+  - typescript
+  - shell
+  - yaml
+  source_paths:
+    python:
+    - src
+    - lib
+    typescript:
+    - frontend/src
+    shell:
+    - scripts
+    yaml:
+    - .github/workflows
+  exclude_patterns:
+    python:
+    - __pycache__
+    - '*.pyc'
+    - '*.pyo'
+    - '*.pyd'
+    - .Python
+    - '*.egg-info'
+    - dist
+    - build
+    - tests/
+    - test_*.py
+    typescript:
+    - node_modules
+    - dist
+    - build
+    - '*.test.ts'
+    - '*.test.tsx'
+    - '*.spec.ts'
+    - '*.spec.tsx'
+    shell:
+    - '*.sh.bak'
+    - '*.bash.bak'
+    yaml:
+    - '*.yml.bak'
+    - '*.yaml.bak'
+rules:
+  naming_convention:
+    enabled: true
+    noise_words:
+    - data
+    - info
+    - object
+    - variable
+    allowed_single_letters:
+    - i
+    - j
+    - k
+  function_length:
+    enabled: true
+    max_lines: 20
+    warn_threshold: 15
+  parameter_count:
+    enabled: true
+    ideal_count: 0
+    acceptable_count: 2
+    max_count: 3
+  line_length:
+    enabled: true
+    max_chars: 120
+    hard_max: 200

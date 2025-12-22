@@ -18,7 +18,7 @@ Create a `.env` file in the project root (this is only for Docker Compose, not f
 # Spotify OAuth (required)
 SPOTIFY_CLIENT_ID=your_spotify_client_id
 SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
-SPOTIFY_REDIRECT_URI=http://localhost:8000/api/auth/callback
+SPOTIFY_REDIRECT_URI=http://127.0.0.1:8000/api/auth/callback
 
 # Optional: Frontend URL (defaults to http://localhost:3000)
 FRONTEND_URL=http://localhost:3000
@@ -30,7 +30,7 @@ FRONTEND_URL=http://localhost:3000
 
 1. Go to https://developer.spotify.com/dashboard
 2. Create a new app
-3. Add redirect URI: `http://localhost:8000/api/auth/callback`
+3. Add redirect URI: `http://127.0.0.1:8000/api/auth/callback` (use `127.0.0.1`, not `localhost` - Spotify blocks `localhost`)
 4. Copy Client ID and Client Secret to `.env` file
 5. Set required scopes:
    - `user-read-playback-state`

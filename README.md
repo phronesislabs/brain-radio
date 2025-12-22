@@ -19,15 +19,23 @@ Brain-Radio uses a **Hierarchical Agent Swarm** with the following agents:
 
 ### Docker (Recommended)
 
-See [README_DOCKER.md](README_DOCKER.md) for full Docker setup instructions.
+See [README_DOCKER.md](README_DOCKER.md) for full Docker setup instructions, or [QUICKSTART_UI.md](QUICKSTART_UI.md) for the web UI quickstart.
+
+**Quick Start:**
 
 ```bash
-# Set environment variables for Docker Compose
+# Set environment variables (or use .env file)
 export SPOTIFY_CLIENT_ID="your_client_id"
 export SPOTIFY_CLIENT_SECRET="your_client_secret"
-export SPOTIFY_REDIRECT_URI="http://localhost:8000/api/auth/callback"
+export SPOTIFY_REDIRECT_URI="http://127.0.0.1:8000/api/auth/callback"
 
-# Run with Docker Compose
+# Run the startup script (checks prerequisites, starts services, opens browser)
+./start.sh
+```
+
+**Or manually with Docker Compose:**
+
+```bash
 docker-compose up --build
 ```
 
@@ -41,7 +49,7 @@ cd frontend && npm install
 # Set environment variables
 export SPOTIFY_CLIENT_ID="your_client_id"
 export SPOTIFY_CLIENT_SECRET="your_client_secret"
-export SPOTIFY_REDIRECT_URI="http://localhost:8000/api/auth/callback"
+export SPOTIFY_REDIRECT_URI="http://127.0.0.1:8000/api/auth/callback"
 
 # Run backend
 uvicorn src.brain_radio.api.main:app --reload

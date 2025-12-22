@@ -22,19 +22,19 @@ Portable security and quality checking tools for repositories.
 
 ```
 .checks/
-├── scripts/
-│   ├── quality-gate.sh       # Full quality gate (comprehensive)
-│   ├── quick-check.sh       # Quick checks (fast feedback)
-│   ├── orchestrator.sh      # Orchestrator with auto-fix
-│   ├── watch-and-check.sh   # File watcher for automatic checks
-│   ├── pre-commit-hook.sh   # Git pre-commit hook
-│   ├── install-git-hooks.sh # Install git hooks
-│   └── tooling/
-│       └── setup-tools.sh   # Tool setup
-├── templates/
-│   └── checks-config.yaml.example
-├── AUTO_CHECKS_GUIDE.md     # Automatic checks guide
-└── install.sh               # Installation script
+|-- scripts/
+|   |-- quality-gate.sh       # Full quality gate (comprehensive)
+|   |-- quick-check.sh       # Quick checks (fast feedback)
+|   |-- orchestrator.sh      # Orchestrator with auto-fix
+|   |-- watch-and-check.sh   # File watcher for automatic checks
+|   |-- pre-commit-hook.sh   # Git pre-commit hook
+|   |-- install-git-hooks.sh # Install git hooks
+|   `-- tooling/
+|       `-- setup-tools.sh   # Tool setup
+|-- templates/
+|   `-- checks-config.yaml.example
+|-- AUTO_CHECKS_GUIDE.md     # Automatic checks guide
+`-- install.sh               # Installation script
 ```
 
 ## Configuration

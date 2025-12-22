@@ -201,9 +201,16 @@ export function SpotifyPlayer({ playlist, isPremium, mode }: SpotifyPlayerProps)
                   className="control-button skip-button"
                   onClick={handleSkip}
                   disabled={!isReady}
-                  title="Skip"
+                  title="Skip Next"
                 >
-                  ⏭
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    width="24"
+                    height="24"
+                  >
+                    <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+                  </svg>
                 </button>
                 <button
                   className="control-button play-pause-button"
@@ -211,16 +218,41 @@ export function SpotifyPlayer({ playlist, isPremium, mode }: SpotifyPlayerProps)
                   disabled={!isReady}
                   title={isPlaying ? 'Pause' : 'Play'}
                 >
-                  {isPlaying ? '⏸' : '▶'}
+                  {isPlaying ? (
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      width="32"
+                      height="32"
+                    >
+                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                    </svg>
+                  ) : (
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      width="32"
+                      height="32"
+                    >
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  )}
                 </button>
                 <button
                   className="control-button skip-button"
                   onClick={handleSkip}
                   disabled={!isReady}
-                  title="Skip"
+                  title="Skip Next"
                   style={{ transform: 'scaleX(-1)' }}
                 >
-                  ⏭
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    width="24"
+                    height="24"
+                  >
+                    <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+                  </svg>
                 </button>
               </div>
 

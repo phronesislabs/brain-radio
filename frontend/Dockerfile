@@ -1,13 +1,15 @@
 # Build stage
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 # Copy package files
 COPY package.json ./
+COPY package-lock.json* ./
 
 # Install dependencies
-RUN npm ci
+# Use npm install if package-lock.json doesn't exist, npm ci if it does
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
 # Copy source files
 COPY . .

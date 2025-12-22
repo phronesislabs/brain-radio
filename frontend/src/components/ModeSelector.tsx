@@ -13,35 +13,30 @@ const modes: Array<{
   label: string
   description: string
   color: string
-  icon: string
 }> = [
   {
     id: 'focus',
     label: 'Focus',
     description: '120-140 BPM, no vocals, steady rhythm',
     color: 'var(--focus-color)',
-    icon: '🎯',
   },
   {
     id: 'relax',
     label: 'Relax',
     description: '60-90 BPM, major keys, acoustic textures',
     color: 'var(--relax-color)',
-    icon: '🌊',
   },
   {
     id: 'sleep',
     label: 'Sleep',
     description: '<60 BPM, ambient/drone, no sudden transients',
     color: 'var(--sleep-color)',
-    icon: '🌙',
   },
   {
     id: 'meditation',
     label: 'Meditation',
     description: 'Low energy, slow tempo, repetitive elements',
     color: 'var(--meditation-color)',
-    icon: '🧘',
   },
 ]
 
@@ -68,7 +63,6 @@ export function ModeSelector({ onModeSelect, isGenerating, selectedMode }: ModeS
               '--mode-color': mode.color,
             } as React.CSSProperties}
           >
-            <span className="mode-icon">{mode.icon}</span>
             <h3 className="mode-label">{mode.label}</h3>
             <p className="mode-description">{mode.description}</p>
           </button>

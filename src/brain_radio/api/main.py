@@ -16,6 +16,11 @@ from pydantic import BaseModel
 
 from brain_radio.agents.supervisor import SupervisorAgent
 from brain_radio.api.constants import (
+    DEFAULT_DURATION_MINUTES,
+    HTTP_STATUS_BAD_REQUEST,
+    HTTP_STATUS_INTERNAL_SERVER_ERROR,
+    HTTP_STATUS_OK,
+    HTTP_STATUS_UNAUTHORIZED,
     OAUTH_STATE_EXPIRY_SECONDS,
     SESSION_DURATION_SECONDS,
     SPOTIFY_SCOPES,
@@ -50,7 +55,7 @@ app.add_middleware(
 # Spotify OAuth configuration
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID", "")
 SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET", "")
-SPOTIFY_REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI", "http://localhost:8000/api/auth/callback")
+SPOTIFY_REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI", "http://127.0.0.1:8000/api/auth/callback")
 # Spotify OAuth configuration
 
 # In-memory session storage (in production, use Redis or database)
@@ -89,7 +94,7 @@ async def login():
     """Initiate Spotify OAuth flow."""
     if not SPOTIFY_CLIENT_ID or not SPOTIFY_CLIENT_SECRET:
         raise HTTPException(
-            status_code=500,
+            status_code=HTTP_STATUS_INTERNAL_SERVER_ERROR,
             detail="Spotify OAuth not configured. Please contact the administrator.",
         )
 
@@ -129,7 +134,7 @@ async def callback(
         raise HTTPException(status_code=400, detail="Invalid state parameter")
 
     # Exchange code for tokens
-    token_data = {
+    token_exchange_payload = {
         "grant_type": "authorization_code",
         "code": code,
         "redirect_uri": SPOTIFY_REDIRECT_URI,
@@ -139,35 +144,40 @@ async def callback(
         auth_header = _create_spotify_auth_header()
         response = await client.post(
             "https://accounts.spotify.com/api/token",
-            data=token_data,
+            data=token_exchange_payload,
             headers={"Authorization": auth_header},
         )
 
-        if response.status_code != 200:
-            raise HTTPException(status_code=400, detail=f"Token exchange failed: {response.text}")
+        if response.status_code != HTTP_STATUS_OK:
+            raise HTTPException(
+                status_code=HTTP_STATUS_BAD_REQUEST,
+                detail=f"Token exchange failed: {response.text}",
+            )
 
         tokens = response.json()
         access_token = tokens["access_token"]
         refresh_token = tokens.get("refresh_token")
 
-        # Get user info
+        # Get user profile information
         user_response = await client.get(
             "https://api.spotify.com/v1/me",
             headers={"Authorization": f"Bearer {access_token}"},
         )
 
-        if user_response.status_code != 200:
-            raise HTTPException(status_code=400, detail="Failed to fetch user info")
+        if user_response.status_code != HTTP_STATUS_OK:
+            raise HTTPException(
+                status_code=HTTP_STATUS_BAD_REQUEST, detail="Failed to fetch user info"
+            )
 
-        user_data = user_response.json()
-        is_premium = user_data.get("product") == "premium"
+        user_profile = user_response.json()
+        is_premium = user_profile.get("product") == "premium"
 
         # Create session
         session_id = secrets.token_urlsafe(32)
         sessions[session_id] = {
             "access_token": access_token,
             "refresh_token": refresh_token,
-            "user_id": user_data.get("id"),
+            "user_id": user_profile.get("id"),
             "is_premium": is_premium,
             "expires_at": time.time() + tokens.get("expires_in", TOKEN_EXPIRY_SECONDS),
         }
@@ -207,8 +217,10 @@ async def get_token(session_id: Optional[str] = Depends(get_session_id)):
                 headers={"Authorization": auth_header},
             )
 
-            if refresh_response.status_code != 200:
-                raise HTTPException(status_code=401, detail="Failed to refresh token")
+            if refresh_response.status_code != HTTP_STATUS_OK:
+                raise HTTPException(
+                    status_code=HTTP_STATUS_UNAUTHORIZED, detail="Failed to refresh token"
+                )
 
             new_tokens = refresh_response.json()
             session["access_token"] = new_tokens["access_token"]
@@ -279,7 +291,7 @@ async def generate_playlist(
     playlist_request = PlaylistRequest(
         mode=request.mode,
         genre=request.genre,
-        duration_minutes=request.duration_minutes or 60,
+        duration_minutes=request.duration_minutes or DEFAULT_DURATION_MINUTES,
     )
 
     # Initialize supervisor with user's OpenAI API key

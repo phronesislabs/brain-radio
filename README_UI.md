@@ -11,12 +11,12 @@ The application consists of two main components:
 
 ## Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 20+ and npm
 - Python 3.11+
 - Spotify Developer Account with:
   - Client ID
   - Client Secret
-  - Redirect URI configured: `http://localhost:8000/api/auth/callback`
+  - Redirect URI configured: `http://127.0.0.1:8000/api/auth/callback` (use `127.0.0.1`, not `localhost`)
 
 ## Setup
 
@@ -28,7 +28,7 @@ See [README_DOCKER.md](README_DOCKER.md) for complete Docker setup.
 # Set environment variables
 export SPOTIFY_CLIENT_ID="your_client_id"
 export SPOTIFY_CLIENT_SECRET="your_client_secret"
-export SPOTIFY_REDIRECT_URI="http://localhost:8000/api/auth/callback"
+export SPOTIFY_REDIRECT_URI="http://127.0.0.1:8000/api/auth/callback"
 
 # Run with Docker Compose
 docker-compose up --build
@@ -45,7 +45,7 @@ pip install -e ".[dev]"
 # Set environment variables
 export SPOTIFY_CLIENT_ID="your_client_id"
 export SPOTIFY_CLIENT_SECRET="your_client_secret"
-export SPOTIFY_REDIRECT_URI="http://localhost:8000/api/auth/callback"
+export SPOTIFY_REDIRECT_URI="http://127.0.0.1:8000/api/auth/callback"
 ```
 
 **2. Frontend Setup:**
@@ -126,7 +126,7 @@ pytest
 ```env
 SPOTIFY_CLIENT_ID=your_spotify_client_id
 SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
-SPOTIFY_REDIRECT_URI=http://localhost:8000/api/auth/callback
+SPOTIFY_REDIRECT_URI=http://127.0.0.1:8000/api/auth/callback
 FRONTEND_URL=http://localhost:3000  # Optional
 ```
 
@@ -134,7 +134,7 @@ FRONTEND_URL=http://localhost:3000  # Optional
 ```bash
 export SPOTIFY_CLIENT_ID="your_spotify_client_id"
 export SPOTIFY_CLIENT_SECRET="your_spotify_client_secret"
-export SPOTIFY_REDIRECT_URI="http://localhost:8000/api/auth/callback"
+export SPOTIFY_REDIRECT_URI="http://127.0.0.1:8000/api/auth/callback"
 ```
 
 **Note:** The OpenAI API key is no longer set via environment variable. It's entered through the web UI and stored securely in your session.
@@ -143,7 +143,7 @@ export SPOTIFY_REDIRECT_URI="http://localhost:8000/api/auth/callback"
 
 1. Go to https://developer.spotify.com/dashboard
 2. Create a new app
-3. Add redirect URI: `http://localhost:8000/api/auth/callback`
+3. Add redirect URI: `http://127.0.0.1:8000/api/auth/callback` (use `127.0.0.1`, not `localhost` - Spotify blocks `localhost`)
 4. Copy Client ID and Client Secret
 5. Set required scopes:
    - `user-read-playback-state`

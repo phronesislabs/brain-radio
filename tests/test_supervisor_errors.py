@@ -140,4 +140,3 @@ async def test_supervisor_error_paths(supervisor):
     except RuntimeError as e:
         # If it fails with RuntimeError, verify the error message format
         assert "Supervisor" in str(e) or "result" in str(e).lower()
-

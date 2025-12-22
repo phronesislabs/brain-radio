@@ -25,6 +25,9 @@ RUN uv pip install --system --no-cache -e ".[dev]"
 # Copy .checks directory for tool setup scripts
 COPY .checks/ ./.checks/
 
+# Copy .cursor directory for rule parsing tests
+COPY .cursor/ ./.cursor/
+
 # Install quality check tools during build
 # The setup-tools.sh script will install shellcheck, actionlint, etc.
 # We need to set ROOT_DIR explicitly to /app so tools go to /app/.tools/bin

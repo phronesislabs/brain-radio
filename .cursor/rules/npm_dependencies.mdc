@@ -1,0 +1,106 @@
+---
+description: npm dependency management and deprecation checking
+globs: frontend/package.json, frontend/package-lock.json
+alwaysApply: false
+---
+
+# npm Dependency Management
+
+## Dependency Updates
+
+- **Check for deprecations**: Run `npm outdated` before committing
+- **Security audits**: Run `npm audit` regularly
+- **Update strategy**: 
+  - Patch updates: Auto-apply via Dependabot
+  - Minor updates: Review and test
+  - Major updates: Manual review required
+
+## Required Checks
+
+Before committing changes to `package.json` or `package-lock.json`:
+
+1. **Run deprecation check**:
+   ```bash
+   cd frontend && npm outdated
+   ```
+
+2. **Run security audit**:
+   ```bash
+   cd frontend && npm audit --audit-level=moderate
+   ```
+
+3. **Fix deprecations**: Update deprecated packages to supported versions
+
+## ESLint Version Management
+
+- **Current**: ESLint 8.x (deprecated)
+- **Target**: ESLint 9.x (requires flat config migration)
+- **Migration**: See [ESLint migration guide](https://eslint.org/docs/latest/use/migrate-to-9.0.0)
+
+## Dependabot Configuration
+
+Dependabot is configured for npm in `.github/dependabot.yml`:
+- Daily scans for security updates
+- Only security updates are auto-created
+- Manual review required for major version updates
+
+## Pre-commit Hooks
+
+npm dependency checks run automatically via pre-commit hooks:
+- `npm-audit`: Checks for vulnerabilities (HIGH severity blocks commit)
+- `npm-deprecated-check`: Warns about deprecated packages (blocks commit if found)
+
+## CI Integration
+
+The CI workflow runs:
+- `npm ci` to install dependencies
+- `npm audit --audit-level=moderate` to check for vulnerabilities
+- `npm outdated` to report deprecated packages (non-blocking)
+
+## Quality Gate Integration
+
+The quality gate script (`.checks/scripts/quality-gate.sh`) includes:
+- Automatic npm dependency checking when `frontend/package.json` exists
+- Deprecation warnings (non-blocking)
+- Security audit (moderate+ severity blocks)
+
+## npm Scripts
+
+The following npm scripts are available in `frontend/package.json`:
+
+- `npm run check:deprecated` - Check for deprecated packages
+- `npm run check:audit` - Run security audit (moderate+ severity)
+- `npm run check:deps` - Run both deprecation and audit checks
+
+## Best Practices
+
+- **Always use `npm ci`** in CI/CD pipelines (not `npm install`)
+- **Update `package-lock.json`** when updating dependencies
+- **Review deprecation warnings** before they become breaking changes
+- **Test thoroughly** after major version updates
+- **Keep dependencies up to date** to avoid security vulnerabilities
+
+## Common Issues
+
+### Deprecated Packages
+
+If you see deprecation warnings:
+1. Check the package's documentation for migration guide
+2. Update to the recommended version
+3. Test thoroughly after update
+4. Update related dependencies if needed
+
+### Security Vulnerabilities
+
+If `npm audit` finds vulnerabilities:
+1. Run `npm audit fix` for automatic fixes (if available)
+2. Review HIGH and CRITICAL severity issues immediately
+3. Update affected packages manually if auto-fix doesn't work
+4. Document any accepted risks in security review
+
+### Transitive Dependencies
+
+Many deprecation warnings come from transitive dependencies (dependencies of dependencies). To fix:
+1. Update the direct dependency that pulls in the deprecated package
+2. Use `npm ls <package-name>` to find which package depends on it
+3. Consider using `npm overrides` or `resolutions` if needed

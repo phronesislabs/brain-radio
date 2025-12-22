@@ -117,3 +117,15 @@ jobs:
           docker-compose build test
           docker-compose --profile test run --rm test python -m ruff check . || true
           docker-compose --profile test run --rm test python -m ruff format --check . || true
+      - name: Setup Node.js
+        uses: actions/setup-node@1e60f620b9541d2be76c4655a4c12cee4d2f3a92 # v4.0.4
+        with:
+          node-version: "20"
+      - name: Check npm dependencies
+        run: |
+          if [ -f frontend/package.json ]; then
+            cd frontend
+            npm ci
+            npm audit --audit-level=moderate || true
+            npm outdated || true
+          fi

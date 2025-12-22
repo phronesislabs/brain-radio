@@ -1,0 +1,141 @@
+---
+description: Guidelines for creating and maintaining Cursor commands to ensure consistency and effectiveness.
+globs: .cursor/commands/*.md
+alwaysApply: true
+---
+
+- **Required Command Structure:**
+  ```markdown
+  ---
+  description: "Clear, one-line description of what the command does"
+  ---
+
+  # Command Name
+
+  Brief overview of what the command does and when to use it.
+
+  ## Usage
+
+  ```bash
+  command-name <required_arg> [optional_arg] --flag
+  ```
+
+  ## Options
+
+  - `<required_arg>`: Description of required argument
+  - `[optional_arg]`: Description of optional argument
+  - `--flag`, `-f`: Description of flag option
+
+  ## Execution Steps
+
+  When the user invokes this command:
+
+  1. **Step 1**: What happens first
+  2. **Step 2**: What happens next
+  3. **Step 3**: Final step
+
+  ## How It Works
+
+  Detailed explanation of the command's implementation.
+
+  ## Examples
+
+  ### Example 1: Basic Usage
+  ```bash
+  command-name example
+  ```
+
+  ## Related Rules
+
+  - [rule_name.mdc](mdc:.cursor/rules/rule_name.mdc): Related rule description
+  ```
+
+- **File Location and Naming:**
+  - Store commands as Markdown files in `.cursor/commands/` directory
+  - Use descriptive, kebab-case filenames that reflect the command's purpose
+  - Example: `code_review.md`, `youtube_transcript.md`, `quick-check.md`
+  - Avoid generic names like `command.md` or `tool.md`
+
+- **Frontmatter Requirements:**
+  - Always include `description` field in YAML frontmatter
+  - Description should be a clear, one-line summary
+  - Use quotes for descriptions containing special characters
+  - No other frontmatter fields are required, but can be added if needed
+
+- **Command Content Guidelines:**
+  - Start with a clear title using `# Command Name`
+  - Include a brief overview paragraph explaining the command's purpose
+  - Structure content with clear sections using `##` headers
+  - Use consistent section names: `Usage`, `Options`, `Execution Steps`, `How It Works`, `Examples`
+  - Include code examples showing actual usage
+  - Reference related rules when applicable
+
+- **Usage Section:**
+  - Show the command syntax with proper formatting
+  - Use angle brackets `< >` for required arguments
+  - Use square brackets `[ ]` for optional arguments
+  - Show flags with both long and short forms: `--flag`, `-f`
+  - Include multiple usage examples if the command has different modes
+
+- **Execution Steps:**
+  - Number steps clearly (1, 2, 3, etc.)
+  - Use bold for step labels: `**Step 1**:`
+  - Be specific about what the agent should do
+  - Include conditional logic when appropriate (if/then scenarios)
+  - Specify when to wait for user approval
+  - Clarify what tools or scripts to call
+
+- **Code Examples:**
+  - Use language-specific code blocks (bash, python, etc.)
+  - Show both simple and complex usage patterns
+  - Include expected output when helpful
+  - Use `DO:` and `DON'T:` patterns for best practices
+  ```bash
+  # DO: Clear command usage
+  command-name --flag value
+
+  # DON'T: Ambiguous or incorrect usage
+  cmd -f val
+  ```
+
+- **File References:**
+  - Use `[filename](mdc:path/to/file)` format for referencing files
+  - Reference related rules: `[rule_name.mdc](mdc:.cursor/rules/rule_name.mdc)`
+  - Reference scripts: `[script.py](mdc:scripts/script.py)`
+  - Reference other commands: `[command.md](mdc:.cursor/commands/command.md)`
+
+- **Command Maintenance:**
+  - Update commands when workflows change
+  - Add examples from actual usage
+  - Remove outdated options or flags
+  - Cross-reference related commands and rules
+  - Keep execution steps synchronized with actual implementation
+
+- **Best Practices:**
+  - Use bullet points for clarity in options and lists
+  - Keep descriptions concise but complete
+  - Include both basic and advanced usage examples
+  - Reference actual code/scripts over theoretical examples
+  - Use consistent formatting across all commands
+  - Specify when commands require external tools or dependencies
+  - Document error handling and edge cases
+  - Include integration notes if the command calls scripts or other tools
+
+- **Agent Instructions:**
+  - Commands should provide clear, step-by-step instructions for agents
+  - Specify which tools to use (e.g., `todo_write`, `read_file`, `run_terminal_cmd`)
+  - Indicate when to wait for user approval before proceeding
+  - Clarify expected outputs or side effects
+  - Document any prerequisites or setup requirements
+
+- **Command vs Rule Distinction:**
+  - **Commands** (`.cursor/commands/*.md`): Executable workflows that agents follow to perform tasks
+  - **Rules** (`.cursor/rules/*.mdc`): Guidelines and constraints that apply to code and behavior
+  - Commands are invoked by users; rules are automatically applied
+  - Commands describe "how to do something"; rules describe "what should be done"
+
+- **Documentation References:**
+  - Reference official Cursor documentation when available
+  - Link to relevant external documentation for tools or libraries used
+  - Include links to related project documentation
+  - Keep documentation links up to date

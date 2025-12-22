@@ -110,3 +110,20 @@ repos:
         language: system
         files: \.github/workflows/.*\.ya?ml$
         pass_filenames: false
+
+  # npm dependency checks
+  - repo: local
+    hooks:
+      - id: npm-audit
+        name: npm audit
+        entry: bash -c 'if [ -f frontend/package.json ]; then cd frontend && (npm ci >/dev/null 2>&1 || npm install >/dev/null 2>&1 || true) && npm audit --audit-level=high --dry-run || exit 1; fi'
+        language: system
+        files: frontend/package\.json|frontend/package-lock\.json
+        pass_filenames: false
+      
+      - id: npm-deprecated-check
+        name: npm deprecated check
+        entry: bash -c 'if [ -f frontend/package.json ]; then cd frontend && (npm ci >/dev/null 2>&1 || npm install >/dev/null 2>&1 || true) && if npm outdated 2>&1 | grep -i deprecated >/dev/null; then echo "WARNING: Deprecated packages found"; npm outdated 2>&1 | grep -i deprecated || true; exit 1; fi; fi'
+        language: system
+        files: frontend/package\.json
+        pass_filenames: false
