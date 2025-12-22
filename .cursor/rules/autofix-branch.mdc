@@ -1,0 +1,10 @@
+---
+description: "Auto-fix branch behavior"
+---
+
+When working in this repository, check the current Git branch name.
+
+If the branch name matches auto-fix patterns (for example: dependabot/*, renovate/*, chore/pinact, chore/security-*),
+prioritize making whatever adjustments are required to get tests and CI passing with the updated dependencies or tooling.
+
+If no auto-fix branch pattern matches, continue with the standard refhub workflow.
