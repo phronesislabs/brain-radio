@@ -49,6 +49,7 @@ services:
       - ./scripts:/app/scripts:ro
     environment:
       - PYTEST_CURRENT_TEST=${PYTEST_CURRENT_TEST:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
     profiles:
       - test
     command: sh -c "pytest --cov=src/brain_radio --cov-report=term-missing --cov-report=xml:coverage/coverage.xml --cov-report=html:coverage/htmlcov -v"
