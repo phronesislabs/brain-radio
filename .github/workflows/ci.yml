@@ -4,11 +4,15 @@ on:
   push:
   pull_request:
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
-  test:
+  quality:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -23,5 +27,12 @@ jobs:
         uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
         with:
           version: "0.7.22"
+      - name: Cache uv
+        uses: actions/cache@c56c7d89ac678f6b0c57019106da5a2a3107735a # v4.3.0
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            uv-${{ runner.os }}-
       - name: Quality gates
         run: ./scripts/quality-gate.sh
