@@ -113,8 +113,10 @@ ELAPSED=0
 LAST_STATUS=""
 
 while [ $ELAPSED -lt $TIMEOUT ]; do
-  RUN_STATUS=$(gh run view "$RUN_ID" --repo "$REPO" --json status,conclusion --jq -r '.status' 2>/dev/null || echo "unknown")
-  RUN_CONCLUSION=$(gh run view "$RUN_ID" --repo "$REPO" --json status,conclusion --jq -r '.conclusion // "none"' 2>/dev/null || echo "none")
+  # Get status and conclusion in a single call
+  RUN_DATA=$(gh run view "$RUN_ID" --repo "$REPO" --json status,conclusion 2>/dev/null || echo '{"status":"unknown","conclusion":"none"}')
+  RUN_STATUS=$(echo "$RUN_DATA" | jq -r '.status // "unknown"')
+  RUN_CONCLUSION=$(echo "$RUN_DATA" | jq -r '.conclusion // "none"')
   STATUS="${RUN_STATUS}/${RUN_CONCLUSION}"
   
   if [ "$STATUS" != "$LAST_STATUS" ]; then
@@ -125,32 +127,32 @@ while [ $ELAPSED -lt $TIMEOUT ]; do
   # Check if completed
   if [ "$RUN_STATUS" = "completed" ]; then
     if [ "$RUN_CONCLUSION" = "success" ]; then
-    echo ""
-    echo -e "${GREEN}✓ Workflow completed successfully!${NC}"
-    echo ""
-    
-    # Get summary
-    echo -e "${BLUE}Fetching run summary...${NC}"
-    gh run view "$RUN_ID" --repo "$REPO" --log || true
-    
-    # Check for created PRs
-    echo ""
-    echo -e "${BLUE}Checking for created pull requests...${NC}"
-    PRS=$(gh pr list --repo "$REPO" --head "renovate/" --json number,title,state --jq '.[] | "\(.number): \(.title) (\(.state))"' 2>/dev/null || echo "")
-    
-    if [ -n "$PRS" ]; then
-      echo -e "${GREEN}Created/Updated Pull Requests:${NC}"
-      echo "$PRS" | while IFS= read -r pr; do
-        echo "  - $pr"
-      done
-    else
-      if [ "$DRY_RUN" == "true" ]; then
-        echo -e "${YELLOW}Dry run mode: No PRs created${NC}"
+      echo ""
+      echo -e "${GREEN}✓ Workflow completed successfully!${NC}"
+      echo ""
+      
+      # Get summary
+      echo -e "${BLUE}Fetching run summary...${NC}"
+      gh run view "$RUN_ID" --repo "$REPO" --log || true
+      
+      # Check for created PRs
+      echo ""
+      echo -e "${BLUE}Checking for created pull requests...${NC}"
+      PRS=$(gh pr list --repo "$REPO" --head "renovate/" --json number,title,state --jq '.[] | "\(.number): \(.title) (\(.state))"' 2>/dev/null || echo "")
+      
+      if [ -n "$PRS" ]; then
+        echo -e "${GREEN}Created/Updated Pull Requests:${NC}"
+        echo "$PRS" | while IFS= read -r pr; do
+          echo "  - $pr"
+        done
       else
-        echo -e "${YELLOW}No new PRs found (may already exist or no updates needed)${NC}"
+        if [ "$DRY_RUN" = "true" ]; then
+          echo -e "${YELLOW}Dry run mode: No PRs created${NC}"
+        else
+          echo -e "${YELLOW}No new PRs found (may already exist or no updates needed)${NC}"
+        fi
       fi
-    fi
-    
+      
       exit 0
     else
       # Completed but not success (failure, cancelled, etc.)
