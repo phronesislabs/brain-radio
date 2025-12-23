@@ -84,8 +84,6 @@ jobs:
 
       - name: Prepare workspace for Renovate
         run: |
-          mkdir -p "${{ github.workspace }}/.renovate-cache"
-          chmod 777 "${{ github.workspace }}/.renovate-cache"
           # Create cache directory inside workspace that Renovate will use
           mkdir -p "${{ github.workspace }}/cache"
           chmod 777 "${{ github.workspace }}/cache"
@@ -93,6 +91,14 @@ jobs:
       - name: Run Renovate
         id: renovate
         run: |
+          # Create cache directory inside container before Renovate runs
+          docker run --rm \
+            --entrypoint /bin/sh \
+            -v "${{ github.workspace }}:/tmp/renovate" \
+            renovate/renovate:37.0.0 \
+            -c "mkdir -p /tmp/renovate/cache && chmod 777 /tmp/renovate/cache" || true
+          
+          # Now run Renovate
           docker run --rm \
             -e RENOVATE_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
             -e RENOVATE_PLATFORM="github" \
@@ -108,7 +114,6 @@ jobs:
             -e RENOVATE_REQUIRE_CONFIG="true" \
             -e RENOVATE_DRY_RUN="${{ steps.inputs.outputs.dry_run }}" \
             -e RENOVATE_CONFIG_FILE="renovate.json" \
-            -e RENOVATE_CACHE_DIR="/tmp/renovate/cache" \
             -v "${{ github.workspace }}:/tmp/renovate" \
             -w /tmp/renovate \
             renovate/renovate:37.0.0
