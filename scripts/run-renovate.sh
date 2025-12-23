@@ -161,7 +161,7 @@ while [ $ELAPSED -lt $TIMEOUT ]; do
       echo -e "${BLUE}Status: ${STATUS}${NC}"
       echo ""
       echo -e "${YELLOW}Last 50 lines of logs:${NC}"
-      gh run view "$RUN_ID" --repo "$REPO" --log --tail 50 || true
+      gh run view "$RUN_ID" --repo "$REPO" --log 2>&1 | tail -50 || true
       exit 1
     fi
   fi
