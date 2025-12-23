@@ -1,8 +1,129 @@
 repos:
+  # Local hooks for quality gates
   - repo: local
     hooks:
-      - id: brain-radio-quality-gate
-        name: brain radio quality gate
-        entry: scripts/quality-gate.sh
+      # Quick check - fast feedback (fail-fast)
+      - id: checks-quick-check
+        name: Checks Quick Check
+        entry: bash -c 'if [ -f .checks/scripts/quick-check.sh ]; then .checks/scripts/quick-check.sh; else echo "quick-check.sh not found, skipping"; exit 0; fi'
         language: system
+        pass_filenames: false
+        always_run: true
+        stages: [commit]
+        # Run before full quality gate for fast feedback
+      
+      # Full quality gate - comprehensive checks
+      - id: checks-quality-gate
+        name: Checks Quality Gate
+        entry: bash -c 'if [ -f .checks/scripts/quality-gate.sh ]; then .checks/scripts/quality-gate.sh; elif [ -f scripts/quality-gate.sh ]; then scripts/quality-gate.sh; else echo "checks quality-gate.sh not found"; exit 1; fi'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [commit, push]
+
+  # Pre-commit hooks for common checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--unsafe]  # Allow custom tags in YAML
+      - id: check-json
+      - id: check-toml
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: mixed-line-ending
+        args: [--fix=lf]
+
+  # Ruff for Python linting and formatting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  # Shellcheck for shell scripts
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        args: [-e, SC1091]  # Allow sourcing files
+
+  # Actionlint for GitHub Actions (via local hook since it needs custom installation)
+  - repo: local
+    hooks:
+      - id: actionlint
+        name: Actionlint
+        entry: bash -c 'if command -v actionlint >/dev/null 2>&1; then actionlint -color; else echo "actionlint not installed, skipping"; exit 0; fi'
+        language: system
+        files: \.github/workflows/.*\.ya?ml$
+        pass_filenames: false
+
+  # Hadolint for Dockerfile security
+  - repo: local
+    hooks:
+      - id: hadolint
+        name: Hadolint Dockerfile Security
+        entry: bash -c 'if command -v hadolint >/dev/null 2>&1; then find . -name "Dockerfile*" -not -path "./.git/*" -exec hadolint {} \; || exit 1; else echo "hadolint not installed, skipping"; exit 0; fi'
+        language: system
+        files: Dockerfile.*
+        pass_filenames: false
+
+  # Trivy for security scanning (via local hook)
+  - repo: local
+    hooks:
+      - id: trivy-fs
+        name: Trivy Security Scan
+        entry: bash -c 'if command -v trivy >/dev/null 2>&1; then trivy fs --scanners vuln,secret,misconfig --severity HIGH,CRITICAL --exit-code 1 --no-progress .; else echo "trivy not installed, skipping"; exit 0; fi'
+        language: system
+        pass_filenames: false
+        always_run: true
+      
+      - id: trivy-docker-config
+        name: Trivy Docker Config Scan
+        entry: bash -c 'if command -v trivy >/dev/null 2>&1; then find . -name "docker-compose*.yml" -o -name "docker-compose*.yaml" | xargs -I {} trivy config --severity HIGH,CRITICAL --exit-code 1 --no-progress {} || exit 1; else echo "trivy not installed, skipping"; exit 0; fi'
+        language: system
+        files: docker-compose.*\.ya?ml$
+        pass_filenames: false
+
+  # Pinact for GitHub Actions pinning
+  - repo: local
+    hooks:
+      - id: pinact-check
+        name: Pinact Check
+        entry: bash -c 'if command -v pinact >/dev/null 2>&1; then pinact run --check; else echo "pinact not installed, skipping"; exit 0; fi'
+        language: system
+        files: \.github/workflows/.*\.ya?ml$
+        pass_filenames: false
+
+  # Zizmor for GitHub Actions security
+  - repo: local
+    hooks:
+      - id: zizmor-check
+        name: Zizmor Check
+        entry: bash -c 'if command -v zizmor >/dev/null 2>&1; then zizmor .github/workflows || exit 1; else echo "zizmor not installed, skipping"; exit 0; fi'
+        language: system
+        files: \.github/workflows/.*\.ya?ml$
+        pass_filenames: false
+
+  # npm dependency checks
+  - repo: local
+    hooks:
+      - id: npm-audit
+        name: npm audit
+        entry: bash -c 'if [ -f frontend/package.json ]; then cd frontend && (npm ci >/dev/null 2>&1 || npm install >/dev/null 2>&1 || true) && npm audit --audit-level=high --dry-run || exit 1; fi'
+        language: system
+        files: frontend/package\.json|frontend/package-lock\.json
+        pass_filenames: false
+      
+      - id: npm-deprecated-check
+        name: npm deprecated check
+        entry: bash -c 'if [ -f frontend/package.json ]; then cd frontend && (npm ci >/dev/null 2>&1 || npm install >/dev/null 2>&1 || true) && if npm outdated 2>&1 | grep -i deprecated >/dev/null; then echo "WARNING: Deprecated packages found"; npm outdated 2>&1 | grep -i deprecated || true; exit 1; fi; fi'
+        language: system
+        files: frontend/package\.json
         pass_filenames: false

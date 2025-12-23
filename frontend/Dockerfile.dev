@@ -1,0 +1,24 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json ./
+COPY package-lock.json* ./
+
+# Install dependencies
+# Use npm install if package-lock.json doesn't exist, npm ci if it does
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+# Copy source files
+COPY . .
+
+# node:20-alpine already has a 'node' user with UID 1000
+# Use that user instead of creating a new one
+RUN chown -R node:node /app
+USER node
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+

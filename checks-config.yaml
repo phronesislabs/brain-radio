@@ -1,0 +1,46 @@
+# Checks Configuration for brain-radio
+quality_gate:
+  coverage:
+    enabled: true
+    threshold: 95
+    paths:
+      - "src/brain_radio"
+    command: "pytest"
+    args:
+      - "--cov"
+      - "--cov-report=term-missing"
+      - "--cov-report=xml"
+  
+  python:
+    enabled: true
+    package_path: "src/brain_radio"
+    install_command: "uv pip install --system -e .[test]"
+    test_extra: "test"
+    fallback_install: "uv pip install --system pytest ruff"
+  
+  docker:
+    enabled: true
+    image_name_pattern: "brain-radio"
+    scan_base_images: true
+    scan_built_images: true
+  
+  tools:
+    pinact: true
+    actionlint: true
+    shellcheck: true
+    zizmor: true
+    hadolint: true
+    trivy: true
+    ruff: true
+    pytest: true
+    mypy: true
+    bandit: true
+    pip_audit: true
+    npm: true
+
+pre_commit:
+  enabled: true
+  auto_fix: true
+
+reports_dir: ".checks/reports"
+

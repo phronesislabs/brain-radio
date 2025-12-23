@@ -6,9 +6,70 @@ on:
 
 permissions:
   contents: read
+  security-events: write
 
 jobs:
   test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - name: Setup tools
+        run: .checks/scripts/tooling/setup-tools.sh
+      - name: Quality gates
+        run: .checks/scripts/quality-gate.sh
+
+  security-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+      - name: Setup tools
+        run: |
+          .checks/scripts/tooling/setup-tools.sh
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@595be6a0f6560a0a8fc419ddf630567fc623531d # 0.22.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          scanners: 'vuln,secret,misconfig'
+          severity: 'HIGH,CRITICAL'
+          format: 'sarif'
+          output: 'trivy-fs-results.sarif'
+          exit-code: '1'
+      - name: Run Trivy Docker config scan
+        run: |
+          mapfile -t compose_files < <(find . -name "docker-compose*.yml" -o -name "docker-compose*.yaml" 2>/dev/null || true)
+          if (( ${#compose_files[@]} > 0 )); then
+            for compose_file in "${compose_files[@]}"; do
+              trivy config --severity HIGH,CRITICAL --exit-code 1 --format sarif --output "trivy-config-$(basename "${compose_file}").sarif" "${compose_file}" || true
+            done
+          fi
+      - name: Run Hadolint on Dockerfiles
+        run: |
+          mapfile -t dockerfile_targets < <(find . -name "Dockerfile*" -type f 2>/dev/null || true)
+          if (( ${#dockerfile_targets[@]} > 0 )); then
+            for dockerfile in "${dockerfile_targets[@]}"; do
+              hadolint "${dockerfile}" || true
+            done
+          fi
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@45c373516f557556c15d420e3f5e0aa3d64366bc # v3.31.9
+        if: always()
+        with:
+          sarif_file: 'trivy-fs-results.sarif'
+
+  lint:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -23,5 +84,48 @@ jobs:
         uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
         with:
           version: "0.7.22"
-      - name: Quality gates
-        run: ./scripts/quality-gate.sh
+      - name: Setup linting tools
+        run: |
+          .checks/scripts/tooling/setup-tools.sh
+      - name: Run actionlint
+        run: actionlint -color || true
+      - name: Run shellcheck
+        run: |
+          mapfile -t shellcheck_targets < <(find . -name "*.sh" -type f 2>/dev/null || true)
+          if (( ${#shellcheck_targets[@]} > 0 )); then
+            shellcheck "${shellcheck_targets[@]}" || true
+          fi
+      - name: Run pinact check
+        run: pinact run --check || true
+      - name: Run zizmor
+        run: |
+          if [ -d .github/workflows ]; then
+            zizmor .github/workflows || true
+          fi
+      - name: Run hadolint
+        run: |
+          mapfile -t dockerfile_targets < <(find . -name "Dockerfile*" -type f 2>/dev/null || true)
+          if (( ${#dockerfile_targets[@]} > 0 )); then
+            for dockerfile in "${dockerfile_targets[@]}"; do
+              hadolint "${dockerfile}" || true
+            done
+          fi
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - name: Run ruff in Docker
+        run: |
+          docker-compose build test
+          docker-compose --profile test run --rm test python -m ruff check . || true
+          docker-compose --profile test run --rm test python -m ruff format --check . || true
+      - name: Setup Node.js
+        uses: actions/setup-node@1e60f620b9541d2be76c4655a4c12cee4d2f3a92 # v4.0.4
+        with:
+          node-version: "20"
+      - name: Check npm dependencies
+        run: |
+          if [ -f frontend/package.json ]; then
+            cd frontend
+            npm ci
+            npm audit --audit-level=moderate || true
+            npm outdated || true
+          fi

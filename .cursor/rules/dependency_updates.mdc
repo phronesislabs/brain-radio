@@ -1,0 +1,154 @@
+---
+description: Guidelines for updating all project dependencies to latest stable versions with strict version pinning
+globs: pyproject.toml, package.json, package-lock.json, Dockerfile*, docker-compose*.yml, **/requirements*.txt, **/Dockerfile*, renovate.json
+alwaysApply: false
+---
+
+# Dependency Updates
+
+Guidelines for updating all project dependencies to latest stable versions with strict version pinning.
+
+- **Version Pinning Requirement (MANDATORY)**
+  - **NEVER use "latest" tag** in any dependency file
+  - **MUST pin to exact version numbers** (e.g., `1.2.3`, not `^1.2.3` or `>=1.2.3`)
+  - **MUST use latest stable version** available at time of update
+  - **MUST verify version exists** before updating (no non-existent versions)
+
+```python
+# ✅ DO: Pin exact version
+dependencies = [
+    "fastapi==0.104.1",
+    "uvicorn[standard]==0.24.1",
+]
+
+# ❌ DON'T: Use latest or ranges
+dependencies = [
+    "fastapi>=0.104.0",  # Range, not pinned
+    "uvicorn:latest",    # Latest tag
+]
+```
+
+```json
+// ✅ DO: Pin exact version
+{
+  "dependencies": {
+    "react": "18.2.0",
+    "axios": "1.6.0"
+  }
+}
+
+// ❌ DON'T: Use ranges or latest
+{
+  "dependencies": {
+    "react": "^18.2.0",  // Range
+    "axios": "latest"    // Latest tag
+  }
+}
+```
+
+```dockerfile
+# ✅ DO: Pin exact version
+FROM python:3.11.7-slim
+FROM node:20.11.0-alpine
+FROM nginx:1.25.3-alpine
+
+# ❌ DON'T: Use latest or tags without versions
+FROM python:3.11-slim  # Minor version only
+FROM node:latest       # Latest tag
+FROM nginx:alpine      # No version
+```
+
+- **Update Discovery Priority (MANDATORY ORDER)**
+  1. **CLI Tools First**: Use native package manager CLI tools
+     - Python: `uv pip list --outdated`, `pip index versions <package>`
+     - npm: `npm outdated`, `npm view <package> versions`
+     - Docker: `docker pull <image>:<tag>` to check latest, `docker manifest inspect`
+     - System packages: `apt list --upgradable`, `brew outdated`
+  2. **API Calls Second**: Use official package registry APIs
+     - PyPI: `https://pypi.org/pypi/<package>/json`
+     - npm: `https://registry.npmjs.org/<package>`
+     - Docker Hub: `https://hub.docker.com/v2/repositories/<org>/<image>/tags/`
+     - GitHub Releases: `https://api.github.com/repos/<org>/<repo>/releases/latest`
+  3. **Web Search Last**: Only when CLI/API unavailable or insufficient
+     - Search for official release pages
+     - Check changelogs and release notes
+     - Verify version numbers from official sources
+
+- **Comprehensive Dependency Discovery**
+  - **Python Dependencies**: Check `pyproject.toml`, `setup.py`, `requirements*.txt`, `Pipfile`
+  - **npm Dependencies**: Check `package.json`, `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`
+  - **Docker Images**: Check all `Dockerfile*` files, `docker-compose*.yml` files
+  - **System Packages**: Check `apt-get install`, `apk add`, `yum install` in Dockerfiles
+  - **Dev Tools**: Check version pins in scripts, CI workflows, tool installation commands
+  - **Build Tools**: Check `setuptools`, `wheel`, `build` versions in `pyproject.toml`
+  - **CI/CD Tools**: Check GitHub Actions versions in `.github/workflows/*.yml`
+  - **Linters/Formatters**: Check `ruff`, `black`, `mypy`, `eslint`, `prettier` versions
+  - **Test Frameworks**: Check `pytest`, `jest`, `vitest` versions
+  - **Runtime Versions**: Check Python version in `pyproject.toml`, Node version in `.nvmrc` or `package.json`
+
+- **Version Verification Requirements**
+  - **Verify version exists** before updating (check registry/API)
+  - **Check release date** to ensure it's stable (not pre-release unless explicitly needed)
+  - **Verify compatibility** with other dependencies (check changelogs for breaking changes)
+  - **Test after update** to ensure nothing breaks
+  - **Document breaking changes** if any occur
+
+- **Update Process Requirements**
+  - **Update all dependencies** in a single pass (don't skip any)
+  - **Update lock files** when present (`package-lock.json`, `poetry.lock`, etc.)
+  - **Update Docker images** to latest stable tags with version numbers
+  - **Update system packages** in Dockerfiles to latest available versions
+  - **Update dev tools** to latest stable versions
+  - **Run tests** after updates to verify compatibility
+  - **Check for security vulnerabilities** after updates
+
+- **Docker Image Update Rules**
+  - **Base images**: Update to latest stable version tag (e.g., `python:3.11.7-slim`, not `python:3.11-slim`)
+  - **Multi-stage builds**: Update all stages independently
+  - **Alpine variants**: Prefer specific Alpine versions (e.g., `alpine:3.19.1`)
+  - **Verify image exists** on Docker Hub before updating
+  - **Check for security updates** in base images
+
+```dockerfile
+# ✅ DO: Pin exact versions
+FROM python:3.11.7-slim AS base
+FROM node:20.11.0-alpine AS builder
+FROM nginx:1.25.3-alpine AS production
+
+# ❌ DON'T: Use floating tags
+FROM python:3.11-slim AS base
+FROM node:20-alpine AS builder
+FROM nginx:alpine AS production
+```
+
+- **Package Manager Specific Rules**
+  - **Python (uv/pip)**: Use `==` for exact versions, update `pyproject.toml` and lock files
+  - **npm**: Update `package.json` with exact versions, regenerate `package-lock.json`
+  - **Docker**: Update `FROM` statements with exact version tags
+  - **System packages**: Pin versions in `apt-get install <package>=<version>` when possible
+
+- **Breaking Changes Handling**
+  - **Read changelogs** before updating major versions
+  - **Test thoroughly** after major version updates
+  - **Update code** if breaking changes require it
+  - **Document changes** in commit messages or PR descriptions
+
+- **Security Considerations**
+  - **Check for security advisories** before updating
+  - **Prefer security updates** even if they're not latest
+  - **Verify package integrity** (checksums, signatures)
+  - **Update vulnerable dependencies** as priority
+
+- **Automated Dependency Management**
+  - **Renovate**: Primary tool for automated dependency updates (see `renovate.json` and [docs/RENOVATE_SETUP.md](docs/RENOVATE_SETUP.md))
+    - Automatically creates PRs for dependency updates
+    - Pins versions to exact numbers
+    - Updates Docker images, npm packages, Python packages, GitHub Actions
+    - Auto-merges safe updates (patches, dev dependencies)
+  - **Dependabot**: Currently configured for security-only updates (complementary to Renovate)
+  - **Manual Updates**: Use `update-dependencies` command for one-time updates
+
+- **Related Rules**
+  - [cursor_rules.mdc](mdc:.cursor/rules/cursor_rules.mdc): Rule formatting guidelines
+  - [clean_code.mdc](mdc:.cursor/rules/clean_code.mdc): Code quality standards
+  - [autofix-branch.mdc](mdc:.cursor/rules/autofix-branch.mdc): Auto-fix branch workflow

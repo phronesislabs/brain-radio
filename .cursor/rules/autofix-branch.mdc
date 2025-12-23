@@ -1,10 +1,32 @@
 ---
 description: "Auto-fix branch behavior"
+globs: **/*
+alwaysApply: true
 ---
+
+# Auto-fix Branch Behavior
 
 When working in this repository, check the current Git branch name.
 
-If the branch name matches auto-fix patterns (for example: dependabot/*, renovate/*, chore/pinact, chore/security-*),
-prioritize making whatever adjustments are required to get tests and CI passing with the updated dependencies or tooling.
+If the branch name matches auto-fix patterns (for example: dependabot/*, renovate/*, chore/pinact, chore/security-*, chore/autofix-*, chore/trivy-*, chore/zizmor-*), prioritize making whatever adjustments are required to get tests and CI passing with the updated dependencies or tooling.
 
-If no auto-fix branch pattern matches, continue with the standard refhub workflow.
+**Priority actions when in autofix branch:**
+
+
+1. Run `scripts/quality-gate.sh` (or quick-check if available) for immediate feedback
+2. Run `scripts/quality-gate.sh` to identify all issues
+3. Fix any test failures first (tests must pass)
+4. Fix any linting/formatting issues (ruff, shellcheck, actionlint)
+5. Fix any security issues (trivy, zizmor) - HIGH and CRITICAL severity must be resolved
+6. Ensure test coverage remains above 95%
+7. Run pre-commit hooks: `pre-commit run --all-files`
+8. If all checks pass, the work is complete
+
+**Do not:**
+
+- Skip tests to make things pass
+- Lower coverage thresholds
+- Ignore HIGH or CRITICAL security findings
+- Commit code that doesn't pass all quality gates
+
+If no auto-fix branch pattern matches, continue with the standard workflow.

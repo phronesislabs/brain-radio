@@ -1,25 +1,74 @@
 version: 2
 updates:
+  # Python dependencies (pip/uv)
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "daily"
       time: "04:00"
       timezone: "UTC"
-    open-pull-requests-limit: 20
+    open-pull-requests-limit: 10
     labels:
       - "dependencies"
       - "security"
+      - "python"
     allow:
       - dependency-type: "all"
     versioning-strategy: "increase-if-necessary"
+    # Paranoid security settings
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-patch"]
+    # Only update on security advisories for patches
+    groups:
+      security-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "security"
+
+  # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "daily"
       time: "04:30"
       timezone: "UTC"
-    open-pull-requests-limit: 20
+    open-pull-requests-limit: 10
     labels:
       - "dependencies"
       - "security"
+      - "github-actions"
+    # Only update on security patches
+    groups:
+      security-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "security"
+
+  # npm (frontend)
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "daily"
+      time: "05:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "security"
+      - "frontend"
+    allow:
+      - dependency-type: "all"
+    versioning-strategy: "increase-if-necessary"
+    # Paranoid security settings
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-patch"]
+    groups:
+      security-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "security"

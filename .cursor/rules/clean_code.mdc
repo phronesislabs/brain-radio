@@ -1,0 +1,787 @@
+---
+description: Clean Code principles - comprehensive guidelines for writing maintainable, readable code
+globs: **/*.py, **/*.ts, **/*.tsx, **/*.js, **/*.jsx, **/*.sh
+alwaysApply: true
+---
+
+# Clean Code Principles
+
+This rule enforces Robert C. Martin's Clean Code principles across the codebase. Reference: "Clean Code: A Handbook of Agile Software Craftsmanship" by Robert C. Martin.
+
+## Clean Code Journaling (MANDATORY)
+
+**All agents applying clean code principles MUST maintain a markdown journal file documenting their work.**
+
+### Purpose
+
+Journaling ensures consistent application of clean code principles across sessions, preventing deviation due to context window limitations or memory decay. The journal serves as a persistent record of decisions, evaluations, and evidence that can be referenced in future sessions.
+
+### Journal Requirements
+
+- **File Location**: Maintain a markdown file (e.g., `CLEAN_CODE_JOURNAL.md` in the project root or `docs/CLEAN_CODE_JOURNAL.md`)
+- **Update Frequency**: Update the journal **during** the application of clean code principles, not after
+- **Completeness**: Every clean code rule addressed must be documented
+
+### Required Journal Entries
+
+For each clean code rule being addressed, the journal MUST include:
+
+1. **Rule Identification**
+   - Which clean code principle/rule is being applied
+   - Section reference (e.g., "Meaningful Names - Use Intention-Revealing Names")
+
+2. **Context and Evaluation**
+   - What code or pattern is being evaluated
+   - Why the rule applies (or doesn't apply) in this context
+   - Decision rationale: what was considered and why a particular approach was chosen
+
+3. **Corrective Actions**
+   - Specific changes made to address the rule
+   - Before/after code comparisons when applicable
+   - Files modified and line numbers affected
+
+4. **Evidence**
+   - Code snippets with line/block citations using the format: `startLine:endLine:filepath`
+   - Logs or test results that demonstrate compliance
+   - Written explanations that cite specific lines or blocks of code
+   - Before/after examples showing improvement
+
+### Journal Entry Format
+
+```markdown
+## [Date] - [Rule Category]: [Specific Rule]
+
+### Context
+
+- **File(s)**: `path/to/file.py`
+- **Issue**: Description of the clean code violation or improvement opportunity
+
+### Evaluation
+
+- **Rule Applied**: [Specific clean code principle]
+- **Decision**: [What was decided and why]
+- **Alternatives Considered**: [Other approaches evaluated]
+
+### Actions Taken
+
+- **Changes Made**: [Specific modifications]
+- **Code References**:
+
+  ```startLine:endLine:path/to/file.py
+  // Before code
+  ```
+
+  ```startLine:endLine:path/to/file.py
+  // After code
+  ```
+
+### Evidence
+
+- **Compliance**: [How compliance was verified]
+- **Test Results**: [If applicable]
+- **Code Quality Metrics**: [If applicable]
+
+```
+
+### Enforcement
+
+- **Mandatory**: Journaling is not optional. Code changes that address clean code principles without corresponding journal entries are incomplete.
+- **Verification**: Before considering clean code work complete, verify that all addressed rules are documented in the journal.
+- **Reference**: When continuing work in a new session, read the journal first to understand previous decisions and maintain consistency.
+
+### Benefits
+
+- **Consistency**: Ensures uniform application of principles across sessions
+- **Traceability**: Provides an audit trail of clean code improvements
+- **Knowledge Preservation**: Captures context and rationale that might be lost between sessions
+- **Evidence-Based**: Creates a record of proof that principles are being followed
+- **Learning**: Helps identify patterns and improve future application of clean code principles
+
+## Meaningful Names
+
+- **Use Intention-Revealing Names**
+  - Names should reveal intent clearly
+  - Avoid single-letter names except for loop counters (`i`, `j`, `k`) or lambda parameters
+  - Choose names that answer "what" and "why", not "how"
+
+```python
+# ✅ DO: Clear intent
+def calculate_total_price(items: list[Item]) -> float:
+    return sum(item.price for item in items)
+
+# ❌ DON'T: Unclear purpose
+def calc(lst: list) -> float:
+    return sum(x.p for x in lst)
+```
+
+- **Make Meaningful Distinctions**
+  - Don't use noise words like `data`, `info`, `object`, `variable`
+  - Avoid number series (`a1`, `a2`, `a3`) or misspelled words
+  - Use pronounceable and searchable names
+
+```python
+# ✅ DO: Distinct and searchable
+def get_user_by_email(email: str) -> User:
+    pass
+
+# ❌ DON'T: Noise words and unclear
+def get_user_data(data: str) -> User:
+    pass
+```
+
+- **Use Searchable Names**
+  - Single-letter names and magic numbers are hard to find
+  - Use named constants instead of magic numbers
+
+```python
+# ✅ DO: Searchable constant
+MAX_RETRY_ATTEMPTS = 3
+if attempts < MAX_RETRY_ATTEMPTS:
+    retry()
+
+# ❌ DON'T: Magic number
+if attempts < 3:
+    retry()
+```
+
+- **Avoid Mental Mapping**
+  - Don't force readers to mentally translate names
+  - Clarity is more important than brevity
+
+- **Class Names**
+  - Use nouns or noun phrases: `Customer`, `Account`, `AddressParser`
+  - Avoid verbs in class names
+
+- **Method Names**
+  - Use verbs or verb phrases: `post_payment()`, `delete_page()`, `save()`
+  - Accessors, mutators, and predicates should be named for their value: `get_name()`, `is_paid()`
+
+- **Don't Be Cute**
+  - Avoid jokes, puns, or cultural references
+  - Prefer clarity over entertainment
+
+- **Pick One Word per Concept**
+  - Use consistent terminology: don't mix `fetch`, `retrieve`, `get`
+  - Use the same word for the same abstract concept
+
+- **Don't Pun**
+  - Avoid using the same word for two purposes
+  - Add meaningful prefixes when necessary
+
+- **Use Solution Domain Names**
+  - Use computer science terms, algorithm names, pattern names, math terms
+  - Don't avoid problem domain names when appropriate
+
+- **Use Problem Domain Names**
+  - When no programming term exists, use problem domain terminology
+  - Separate solution domain from problem domain concepts
+
+- **Add Meaningful Context**
+  - Use prefixes when necessary to provide context
+  - Create classes/namespaces to provide context when appropriate
+
+## Functions
+
+- **Small Functions**
+  - Functions should be small (ideally < 20 lines)
+  - Functions should do one thing and do it well
+  - Functions should be smaller than the functions that call them
+
+```python
+# ✅ DO: Small, focused function
+def calculate_tax(price: float, rate: float) -> float:
+    return price * rate
+
+# ❌ DON'T: Too many responsibilities
+def process_order(order: Order) -> None:
+    # Validates, calculates, saves, sends email, logs...
+    pass
+```
+
+- **Do One Thing**
+  - A function should do one thing, do it well, and do it only
+  - If you can extract another function with a name that is not a restatement of its implementation, the function does more than one thing
+
+- **One Level of Abstraction per Function**
+  - Statements in a function should all be at the same level of abstraction
+  - Mixing levels of abstraction makes functions harder to read
+
+- **Switch Statements**
+  - Keep switch statements small and limited
+  - Use polymorphism when possible to avoid large switch statements
+
+- **Use Descriptive Names**
+  - Long descriptive names are better than short enigmatic ones
+  - Function names should be verbs or verb phrases
+  - Don't be afraid to make names long if they clarify intent
+
+- **Function Arguments**
+  - The ideal number of arguments is zero (niladic)
+  - Next best is one (monadic), followed by two (dyadic)
+  - Three (triadic) should be avoided where possible
+  - More than three (polyadic) requires very special justification
+
+```python
+# ✅ DO: Few arguments
+def send_email(to: str, subject: str, body: str) -> None:
+    pass
+
+# ❌ DON'T: Too many arguments
+def send_email(to, cc, bcc, subject, body, attachments, priority, flags):
+    pass
+```
+
+- **Common Monadic Forms**
+  - Ask a question about the argument: `file_exists(path)`
+  - Transform the argument into something else: `file_to_string(file)`
+  - Event: `password_failed_attempts(user)`
+
+- **Flag Arguments**
+  - Avoid boolean arguments that indicate the function does more than one thing
+  - Split into separate functions instead
+
+```python
+# ✅ DO: Separate functions
+def render_with_suite():
+    pass
+
+def render_without_suite():
+    pass
+
+# ❌ DON'T: Flag argument
+def render(include_suite: bool):
+    pass
+```
+
+- **Dyadic Functions**
+  - Two arguments are acceptable when they form a natural pair: `Point(x, y)`
+  - Use meaningful argument order: natural ordering, input then output, modified object last
+
+- **Triads**
+  - Functions with three arguments require careful ordering
+  - Consider creating a small class to encapsulate the arguments
+
+- **Argument Objects**
+  - When a function needs more than two or three arguments, consider creating an argument object
+  - This makes the function easier to read and test
+
+- **Have No Side Effects**
+  - Functions should do one thing, not do hidden things
+  - Side effects create temporal couplings and unexpected dependencies
+
+```python
+# ✅ DO: No side effects
+def check_password(username: str, password: str) -> bool:
+    return user_repository.verify(username, password)
+
+# ❌ DON'T: Hidden side effect
+def check_password(username: str, password: str) -> bool:
+    if user_repository.verify(username, password):
+        session.initialize(username)  # Hidden side effect!
+        return True
+    return False
+```
+
+- **Command Query Separation**
+  - Functions should either do something (command) or answer something (query), but not both
+  - `set()` should not return a value, `get()` should not modify state
+
+- **Prefer Exceptions to Returning Error Codes**
+  - Error codes create clutter and force callers to handle errors immediately
+  - Exceptions allow error handling to be separated from business logic
+
+- **Extract Try-Catch Blocks**
+  - Try-catch blocks are ugly and obscure the logic
+  - Extract try-catch blocks into functions of their own
+
+- **Don't Repeat Yourself (DRY)**
+  - Duplication is the root of all evil
+  - Extract common functionality into functions or classes
+
+## Comments
+
+- **Comments Do Not Make Up for Bad Code**
+  - Clear and expressive code with few comments is far superior to cluttered code with lots of comments
+  - Don't comment bad code—rewrite it
+
+- **Explain Yourself in Code**
+  - Good code is self-documenting
+  - Comments should explain "why", not "what"
+
+```python
+# ✅ DO: Self-documenting code
+if employee.is_eligible_for_retirement():
+    process_retirement(employee)
+
+# ❌ DON'T: Comment explains what code does
+# Check if employee is eligible for retirement
+if employee.age >= 65 and employee.years_of_service >= 10:
+    process_retirement(employee)
+```
+
+- **Good Comments**
+  - Legal comments (copyright, license)
+  - Informative comments (explain intent, not implementation)
+  - Explanation of intent (why something was done)
+  - Warning of consequences
+  - TODO comments (with issue tracker reference)
+  - Amplification (emphasize importance)
+  - Public API documentation
+
+- **Bad Comments**
+  - Mumbling (unclear or incomplete)
+  - Redundant comments (restate the code)
+  - Misleading comments (don't match code)
+  - Mandated comments (required but not useful)
+  - Journal comments (version control handles this)
+  - Noise comments (obvious)
+  - Scary comments (apologize for code)
+  - Commented-out code (delete it, use version control)
+  - HTML comments (don't put HTML in code)
+  - Non-local information (comment doesn't describe nearby code)
+  - Too much information (unnecessary details)
+  - Inobvious connection (comment doesn't relate to code)
+  - Function headers (code should be self-explanatory)
+  - Javadoc in non-public code (only document public APIs)
+
+## Formatting
+
+- **The Purpose of Formatting**
+  - Code formatting is about communication
+  - Professional developers take formatting seriously
+
+- **Vertical Formatting**
+  - Small files are easier to understand than large files
+  - Related concepts should be kept close together
+  - Vertical distance: closely related concepts should be vertically close
+  - Variable declarations should be as close as possible to their usage
+  - Instance variables should be declared at the top of the class
+  - Dependent functions should be close (caller above callee when possible)
+  - Conceptual affinity: concepts that are related should be kept together
+
+- **Horizontal Formatting**
+  - Keep lines short (ideally < 120 characters, max 200)
+  - Use indentation to show scope
+  - Align related assignments when it improves readability
+  - Break long lines at natural points (after operators, after commas)
+
+- **Team Rules**
+  - A team should agree on a single formatting style
+  - Use automated formatters (ruff, black, prettier) to enforce style
+
+## Objects and Data Structures
+
+- **Data Abstraction**
+  - Hide internal structure and expose abstract interfaces
+  - Don't expose internal data through accessors and mutators
+
+```python
+# ✅ DO: Abstract interface
+class Vehicle:
+    def get_fuel_tank_capacity_in_gallons(self) -> float:
+        pass
+
+# ❌ DON'T: Expose internal structure
+class Vehicle:
+    def get_fuel_tank_capacity(self) -> float:
+        return self.fuel_tank_capacity  # Exposes internal field
+```
+
+- **Data/Object Anti-Symmetry**
+  - Objects hide their data behind abstractions and expose functions that operate on that data
+  - Data structures expose their data and have no meaningful functions
+  - Don't mix the two: either be an object or a data structure
+
+- **The Law of Demeter**
+  - A module should not know about the innards of the objects it manipulates
+  - Don't chain method calls: `obj.get_a().get_b().get_c()`
+  - Prefer: `obj.get_c()` where `get_c()` encapsulates the chain
+
+```python
+# ✅ DO: Encapsulate chain
+class Address:
+    def get_zip_code(self) -> str:
+        return self.zip_code
+
+# ❌ DON'T: Chain of calls
+zip_code = customer.get_address().get_zip_code()
+```
+
+- **Data Transfer Objects (DTOs)**
+  - DTOs are simple data structures with public variables and no functions
+  - Useful for communicating with databases, parsing messages, etc.
+
+## Error Handling
+
+- **Use Exceptions Rather Than Return Codes**
+  - Error codes create clutter and force immediate error handling
+  - Exceptions allow separation of error handling from business logic
+
+```python
+# ✅ DO: Use exceptions
+def delete_page(page: Page) -> None:
+    if not page.exists():
+        raise PageNotFoundException(f"Page {page.id} not found")
+    page.delete()
+
+# ❌ DON'T: Return error codes
+def delete_page(page: Page) -> int:
+    if not page.exists():
+        return ERROR_PAGE_NOT_FOUND
+    page.delete()
+    return SUCCESS
+```
+
+- **Write Your Try-Catch-Finally Statement First**
+  - Start with exception handling when writing code that can throw
+  - This helps define expected behavior
+
+- **Use Unchecked Exceptions**
+  - Checked exceptions violate Open/Closed Principle
+  - They create dependency chains (callers must know about exceptions)
+
+- **Provide Context with Exceptions**
+  - Include enough context to locate the source and cause of the exception
+  - Create informative error messages
+
+- **Define Exception Classes in Terms of a Caller's Needs**
+  - Define exception classes based on how they are caught
+  - Wrap third-party APIs to define your own exception types
+
+- **Don't Return Null**
+  - Returning null forces callers to handle null checks
+  - Throw exceptions or return special case objects instead
+
+```python
+# ✅ DO: Return empty collection or raise exception
+def get_employees() -> list[Employee]:
+    employees = fetch_from_database()
+    return employees if employees else []
+
+# ❌ DON'T: Return null
+def get_employees() -> list[Employee] | None:
+    employees = fetch_from_database()
+    return employees if employees else None
+```
+
+- **Don't Pass Null**
+  - Don't pass null into methods
+  - Validate inputs and throw exceptions for null arguments
+
+## Boundaries
+
+- **Using Third-Party Code**
+  - Wrap third-party APIs to avoid dependency on their interfaces
+  - Create adapter layers to isolate external dependencies
+
+- **Exploring and Learning Boundaries**
+  - Write learning tests for third-party code
+  - Tests help understand how third-party code works
+
+- **Learning Tests Are Free**
+  - Learning tests don't cost anything
+  - They help understand third-party APIs and detect breaking changes
+
+- **Using Code That Does Not Yet Exist**
+  - Define interfaces for code that doesn't exist yet
+  - Implement adapters when the real code arrives
+
+- **Clean Boundaries**
+  - Keep boundaries clean and well-defined
+  - Avoid letting too much of your code know about third-party particulars
+
+## Unit Tests
+
+- **The Three Laws of TDD**
+  1. You may not write production code until you have written a failing unit test
+  2. You may not write more of a unit test than is sufficient to fail
+  3. You may not write more production code than is sufficient to pass the test
+
+- **Keep Tests Clean**
+  - Test code is just as important as production code
+  - Dirty tests are worse than no tests
+
+- **Tests Enable Change**
+  - Good tests give you the confidence to refactor
+  - Without tests, refactoring is dangerous
+
+- **Clean Tests**
+  - Readability is the most important aspect of tests
+  - Tests should be clear, concise, and expressive
+
+- **One Assert per Test**
+  - Each test should verify one concept
+  - Use multiple asserts only when testing the same concept
+
+- **F.I.R.S.T.**
+  - **Fast**: Tests should run quickly
+  - **Independent**: Tests should not depend on each other
+  - **Repeatable**: Tests should be repeatable in any environment
+  - **Self-Validating**: Tests should have a boolean output (pass/fail)
+  - **Timely**: Tests should be written just before the production code
+
+## Classes
+
+- **Class Organization**
+  - Classes should be small
+  - Classes should have a single responsibility (SRP)
+  - Classes should have only one reason to change
+
+- **Single Responsibility Principle (SRP)**
+  - A class should have only one reason to change
+  - If a class has multiple responsibilities, split it
+
+```python
+# ✅ DO: Single responsibility
+class User:
+    def __init__(self, name: str, email: str):
+        self.name = name
+        self.email = email
+
+class UserRepository:
+    def save(self, user: User) -> None:
+        pass
+
+# ❌ DON'T: Multiple responsibilities
+class User:
+    def __init__(self, name: str, email: str):
+        self.name = name
+        self.email = email
+    
+    def save_to_database(self) -> None:
+        pass  # Database responsibility
+    
+    def send_email(self) -> None:
+        pass  # Email responsibility
+```
+
+- **Cohesion**
+  - Classes should have high cohesion
+  - Methods and variables should be dependent on each other
+  - When cohesion is high, classes are easier to understand and maintain
+
+- **Maintaining Cohesion Results in Many Small Classes**
+  - High cohesion leads to many small, focused classes
+  - This is good: small classes are easier to understand and test
+
+- **Organizing for Change**
+  - Organize classes to make change easy
+  - Isolate changes to specific classes
+
+## SOLID Principles
+
+- **Single Responsibility Principle (SRP)**
+  - A class should have only one reason to change
+  - Each class should have a single, well-defined purpose
+
+- **Open/Closed Principle (OCP)**
+  - Software entities should be open for extension but closed for modification
+  - Use abstraction and polymorphism to achieve this
+
+```python
+# ✅ DO: Open for extension, closed for modification
+class Shape:
+    def area(self) -> float:
+        raise NotImplementedError
+
+class Rectangle(Shape):
+    def area(self) -> float:
+        return self.width * self.height
+
+class Circle(Shape):
+    def area(self) -> float:
+        return math.pi * self.radius ** 2
+
+# ❌ DON'T: Must modify for new shapes
+def calculate_area(shape_type: str, **kwargs) -> float:
+    if shape_type == "rectangle":
+        return kwargs["width"] * kwargs["height"]
+    elif shape_type == "circle":
+        return math.pi * kwargs["radius"] ** 2
+    # Must modify this function for new shapes
+```
+
+- **Liskov Substitution Principle (LSP)**
+  - Subtypes must be substitutable for their base types
+  - Derived classes must be usable through the base class interface
+
+- **Interface Segregation Principle (ISP)**
+  - Clients should not be forced to depend on interfaces they do not use
+  - Create specific interfaces rather than general-purpose ones
+
+```python
+# ✅ DO: Segregated interfaces
+class Printer:
+    def print(self, document: str) -> None:
+        pass
+
+class Scanner:
+    def scan(self) -> str:
+        pass
+
+class MultiFunctionDevice(Printer, Scanner):
+    pass
+
+# ❌ DON'T: Fat interface
+class MultiFunctionDevice:
+    def print(self, document: str) -> None:
+        pass
+    
+    def scan(self) -> str:
+        pass
+    
+    def fax(self, document: str) -> None:
+        pass  # Not all devices can fax
+```
+
+- **Dependency Inversion Principle (DIP)**
+  - Depend on abstractions, not concretions
+  - High-level modules should not depend on low-level modules
+
+```python
+# ✅ DO: Depend on abstraction
+class UserService:
+    def __init__(self, repository: UserRepository):
+        self.repository = repository
+
+# ❌ DON'T: Depend on concretion
+class UserService:
+    def __init__(self):
+        self.repository = PostgreSQLUserRepository()  # Hard dependency
+```
+
+## Systems
+
+- **Separate Construction from Use**
+  - Separate the startup process (construction) from runtime logic (use)
+  - Use dependency injection and factories
+
+- **Dependency Injection**
+  - Depend on abstractions, not concretions
+  - Inject dependencies through constructors or setters
+
+- **Scaling Up**
+  - Design systems to scale
+  - Use appropriate architectural patterns
+
+## Emergence
+
+- **Simple Design Rules**
+  1. Runs all tests
+  2. Contains no duplication
+  3. Expresses intent
+  4. Minimizes classes and methods
+
+- **Refactoring**
+  - Continuously refactor to improve design
+  - Remove duplication, improve names, simplify logic
+
+## Concurrency
+
+- **Why Concurrency?**
+  - Concurrency improves performance and responsiveness
+  - But it adds complexity and potential bugs
+
+- **Myths and Misconceptions**
+  - "Concurrency always improves performance" - Not always
+  - "Design doesn't change when writing concurrent programs" - It does
+  - "Understanding concurrency issues is not important" - It is critical
+
+- **Challenges**
+  - Race conditions
+  - Deadlocks
+  - Resource contention
+
+- **Concurrency Defense Principles**
+  - Single Responsibility Principle: separate concurrency code from business logic
+  - Limit the scope of data: limit access to shared data
+  - Use copies of data: avoid shared mutable state
+  - Threads should be as independent as possible
+  - Know your library: understand concurrency primitives
+  - Know your execution model: understand thread pools, producer-consumer, etc.
+  - Beware dependencies between synchronized methods
+  - Keep synchronized sections small
+  - Write thread-safe code: make critical sections small and thread-safe
+  - Don't share mutable state: prefer immutable objects
+
+## Successive Refinement
+
+- **Iterative Refinement**
+  - Start with a working solution
+  - Refine iteratively to improve design
+  - Each iteration improves the code structure
+
+## Code Smells
+
+- **Comments**
+  - Too many comments indicate unclear code
+  - Refactor to make code self-explanatory
+
+- **Long Method**
+  - Methods should be short and focused
+  - Extract methods to improve readability
+
+- **Long Parameter List**
+  - Too many parameters indicate the method does too much
+  - Use parameter objects or refactor the method
+
+- **Duplicated Code**
+  - Duplication is the root of all evil
+  - Extract common functionality
+
+- **Dead Code**
+  - Remove unused code, variables, and methods
+  - Version control preserves history
+
+- **Speculative Generality**
+  - Don't add functionality "just in case"
+  - YAGNI: You Aren't Gonna Need It
+
+- **Feature Envy**
+  - A method that uses more features of another class than its own
+  - Move the method to the class it envies
+
+- **Data Clumps**
+  - Groups of data that always appear together
+  - Extract into objects
+
+- **Primitive Obsession**
+  - Using primitives instead of small objects
+  - Create value objects for meaningful concepts
+
+- **Long Class**
+  - Classes should be small and focused
+  - Split large classes into smaller ones
+
+- **Large Class**
+  - Classes that do too much
+  - Apply Single Responsibility Principle
+
+- **Switch Statements**
+  - Large switch statements indicate missing polymorphism
+  - Use polymorphism instead
+
+- **Temporary Field**
+  - Fields that are only used in certain circumstances
+  - Extract into a separate class
+
+- **Refused Bequest**
+  - Subclasses that don't use inherited functionality
+  - Consider composition over inheritance
+
+- **Comments**
+  - Comments that explain what code does (not why)
+  - Refactor code to be self-explanatory
+
+## Heuristics
+
+- **General Rules**
+  - Follow the Boy Scout Rule: leave code cleaner than you found it
+  - Refactor continuously
+  - Write tests first (TDD)
+  - Keep functions small
+  - Keep classes small
+  - Use meaningful names
+  - Avoid duplication
+  - Express intent clearly
+  - Minimize complexity

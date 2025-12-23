@@ -1,0 +1,60 @@
+# Multi-stage build with test validation
+# This Dockerfile runs tests during build to ensure only tested code gets into production images
+
+# Stage 1: Test stage - validates code before building production image
+FROM python:3.11-slim AS test
+
+WORKDIR /app
+
+# Install system dependencies
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    gcc \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv for package management (version managed by project requirements)
+# hadolint ignore=DL3013
+RUN pip install --no-cache-dir uv
+
+# Copy dependency files
+COPY pyproject.toml setup.py ./
+COPY src/ ./src/
+COPY tests/ ./tests/
+
+# Install Python dependencies including dev dependencies
+RUN uv pip install --system --no-cache -e ".[dev]"
+
+# Run tests - build fails if tests fail
+# This ensures only tested code makes it into production images
+RUN pytest --cov=src/brain_radio --cov-report=xml --cov-report=term-missing --cov-report=html || \
+    (echo "ERROR: Tests failed during build. Production image cannot be created." && exit 1)
+
+# Stage 2: Production stage - only reached if tests pass
+FROM python:3.11-slim AS production
+
+WORKDIR /app
+
+# Install system dependencies
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv for package management (version managed by project requirements)
+# hadolint ignore=DL3013
+RUN pip install --no-cache-dir uv
+
+# Copy dependency files
+COPY pyproject.toml setup.py ./
+COPY src/ ./src/
+
+# Install only production dependencies (no dev dependencies)
+RUN uv pip install --system --no-cache -e .
+
+# Expose port
+EXPOSE 8000
+
+# Run the application
+CMD ["uvicorn", "src.brain_radio.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+

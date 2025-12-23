@@ -1,0 +1,81 @@
+---
+description: "Automatic checks and fail-fast behavior"
+globs: **/*
+alwaysApply: true
+---
+
+## Automatic Check Triggers
+
+When working in this repository, automatically run checks at these triggers:
+
+### 1. On File Save (Fast Feedback)
+- **Trigger**: When any `.py`, `.sh`, `.yml`, `.yaml`, `Dockerfile*`, or `.github/workflows/*` file is saved
+- **Action**: Run `scripts/quality-gate.sh` (or quick-check if available) for immediate feedback
+- **Purpose**: Catch formatting and syntax errors immediately (fail-fast)
+- **Timeout**: Should complete in < 5 seconds
+
+### 2. Before Commit (Pre-Pre-Commit)
+- **Trigger**: When user attempts to commit (before actual git commit)
+- **Action**: Run `scripts/quality-gate.sh` (or quick-check if available) first, then `scripts/quality-gate.sh` if quick checks pass
+- **Purpose**: Prevent committing code with issues
+- **Behavior**: 
+  - If quick checks fail → show errors, block commit
+  - If quick checks pass → run full quality gate
+  - If quality gate fails → show errors, block commit
+
+### 3. Periodic Background Checks (Deterministic Interval)
+- **Trigger**: Every 5 minutes of active editing, or after 10 file changes
+- **Action**: Run `scripts/quality-gate.sh` (or quick-check if available) in background
+- **Purpose**: Continuous feedback without interrupting workflow
+- **Behavior**: Show non-blocking notifications if issues found
+
+### 4. On Branch Switch
+- **Trigger**: When switching Git branches
+- **Action**: Run `scripts/quality-gate.sh` to verify branch state
+- **Purpose**: Ensure branch is in good state before continuing work
+
+### 5. On Dependency Changes
+- **Trigger**: When `pyproject.toml`, `package.json`, `requirements*.txt`, or `Dockerfile*` files change
+- **Action**: Run security scans (Trivy, pip-audit if enabled)
+- **Purpose**: Immediate security feedback on dependency changes
+
+## Fail-Fast Principles
+
+1. **Quick checks run first** - Fast feedback (< 5 seconds)
+2. **Block on critical issues** - Don't allow committing broken code
+3. **Show errors immediately** - Don't wait for full scan
+4. **Prioritize by severity**:
+   - Formatting issues → Auto-fix silently
+   - Linting issues → Show warning, allow continue
+   - Security issues (HIGH/CRITICAL) → Block commit
+   - Test failures → Block commit
+   - Coverage below threshold → Block commit
+
+## Implementation
+
+The quick-check script (if available, or use `scripts/quality-gate.sh` with quick mode) runs:
+- Python formatting (ruff format --check)
+- Shell script syntax (shellcheck on changed files)
+- GitHub Actions syntax (actionlint)
+
+The full quality gate (`scripts/quality-gate.sh`) runs:
+- All quick checks
+- Security scans
+- Full linting
+- Tests and coverage
+- All configured tools
+
+## Agent Behavior
+
+When acting as a coding agent:
+1. **After each file edit**: Run quick-check if file type matches
+2. **Before suggesting commit**: Run full quality gate
+3. **On error detection**: Fix immediately, don't accumulate issues
+4. **On security finding**: Stop and report immediately (fail-fast)
+
+## User Experience
+
+- Quick checks should be **non-intrusive** (background, notifications)
+- Full checks should be **explicit** (user-initiated or pre-commit)
+- Errors should be **actionable** (show how to fix)
+- Auto-fixes should be **transparent** (show what was fixed)

@@ -1,0 +1,118 @@
+name: Renovate
+
+on:
+  # Scheduled trigger (matches renovate.json schedule: before 4am on monday)
+  schedule:
+    - cron: '0 4 * * 1'  # Every Monday at 4:00 AM UTC
+  # Manual trigger via GitHub UI or CLI
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run mode (no PRs created)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+      include_major:
+        description: 'Include major version updates'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+  # Callable from other workflows
+  workflow_call:
+    inputs:
+      dry_run:
+        description: 'Dry run mode (no PRs created)'
+        required: false
+        default: 'false'
+        type: string
+      include_major:
+        description: 'Include major version updates'
+        required: false
+        default: 'false'
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Set input defaults for scheduled runs
+        id: inputs
+        run: |
+          # For scheduled runs, inputs are not available, use defaults
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "dry_run=false" >> $GITHUB_OUTPUT
+            echo "include_major=false" >> $GITHUB_OUTPUT
+          else
+            # For workflow_dispatch and workflow_call, use inputs with fallback
+            # Normalize to boolean string (handle both choice and string types)
+            DRY_RUN="${{ inputs.dry_run || 'false' }}"
+            INCLUDE_MAJOR="${{ inputs.include_major || 'false' }}"
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "dry_run=true" >> $GITHUB_OUTPUT
+            else
+              echo "dry_run=false" >> $GITHUB_OUTPUT
+            fi
+            if [ "$INCLUDE_MAJOR" = "true" ]; then
+              echo "include_major=true" >> $GITHUB_OUTPUT
+            else
+              echo "include_major=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Run Renovate
+        id: renovate
+        run: |
+          docker run --rm \
+            -e RENOVATE_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
+            -e RENOVATE_PLATFORM="github" \
+            -e RENOVATE_REPOSITORIES="${{ github.repository }}" \
+            -e RENOVATE_AUTODISCOVER="true" \
+            -e RENOVATE_AUTOFIX="true" \
+            -e RENOVATE_AUTOMERGE="true" \
+            -e RENOVATE_AUTOMERGE_TYPE="pr" \
+            -e RENOVATE_AUTOMERGE_STRATEGY="squash" \
+            -e RENOVATE_INCLUDE_MAJOR="${{ steps.inputs.outputs.include_major }}" \
+            -e RENOVATE_LOG_LEVEL="debug" \
+            -e RENOVATE_ONBOARDING="false" \
+            -e RENOVATE_REQUIRE_CONFIG="true" \
+            -e RENOVATE_DRY_RUN="${{ steps.inputs.outputs.dry_run }}" \
+            -e RENOVATE_CONFIG_FILE="renovate.json" \
+            -v "${{ github.workspace }}:/tmp/renovate" \
+            -w /tmp/renovate \
+            renovate/renovate:37.0.0
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Renovate Run Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dry Run**: ${{ steps.inputs.outputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Include Major**: ${{ steps.inputs.outputs.include_major }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check the logs above for details on what was updated." >> $GITHUB_STEP_SUMMARY
+

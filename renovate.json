@@ -1,0 +1,134 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":pinAllExceptPeerDependencies",
+    ":automergePatch",
+    ":automergeMinor",
+    ":automergePr",
+    ":semanticCommits",
+    ":semanticCommitTypeAll(deps)"
+  ],
+  "enabledManagers": [
+    "npm",
+    "pip_requirements",
+    "dockerfile",
+    "docker-compose",
+    "github-actions"
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["npm"],
+      "matchPackagePatterns": ["*"],
+      "rangeStrategy": "replace",
+      "pinDigests": true
+    },
+    {
+      "matchManagers": ["pip_requirements"],
+      "matchPackagePatterns": ["*"],
+      "rangeStrategy": "pin"
+    },
+    {
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "matchPackagePatterns": ["*"],
+      "pinDigests": true,
+      "versioning": "docker"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "pinDigests": true
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash"
+    },
+    {
+      "matchDepTypes": ["dependencies"],
+      "automerge": false,
+      "requiredStatusChecks": ["test", "lint", "security-scan"]
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "requiredStatusChecks": ["test", "lint", "security-scan"]
+    },
+    {
+      "matchUpdateTypes": ["patch", "pin"],
+      "automerge": true,
+      "automergeType": "pr"
+    }
+  ],
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "schedule": [
+    "before 4am on monday"
+  ],
+  "timezone": "UTC",
+  "labels": [
+    "dependencies",
+    "renovate"
+  ],
+  "assignees": [],
+  "reviewers": [],
+  "branchPrefix": "renovate/",
+  "commitMessagePrefix": "chore(deps): ",
+  "semanticCommits": "enabled",
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps",
+  "groupName": "All non-major dependencies",
+  "groupSlug": "all-minor-patch",
+  "separateMinorPatch": true,
+  "separateMajorMinor": true,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 4am on monday"]
+  },
+  "docker": {
+    "pinDigests": true,
+    "major": {
+      "enabled": false
+    }
+  },
+  "python": {
+    "pinDigests": false
+  },
+  "npm": {
+    "pinDigests": false,
+    "fileMatch": [
+      "^package\\.json$",
+      "^package-lock\\.json$"
+    ]
+  },
+  "pip_requirements": {
+    "fileMatch": [
+      "^requirements.*\\.txt$",
+      "^pyproject\\.toml$"
+    ]
+  },
+  "dockerfile": {
+    "fileMatch": [
+      "^Dockerfile$",
+      "^Dockerfile\\..*$"
+    ]
+  },
+  "docker-compose": {
+    "fileMatch": [
+      "^docker-compose\\.yml$",
+      "^docker-compose\\..*\\.yml$"
+    ]
+  },
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": [
+      "security",
+      "dependencies"
+    ]
+  },
+  "ignoreDeps": [],
+  "ignorePresets": [
+    ":prImmediately"
+  ]
+}
+
