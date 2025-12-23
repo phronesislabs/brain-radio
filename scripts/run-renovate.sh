@@ -113,7 +113,9 @@ ELAPSED=0
 LAST_STATUS=""
 
 while [ $ELAPSED -lt $TIMEOUT ]; do
-  STATUS=$(gh run view "$RUN_ID" --repo "$REPO" --json status,conclusion --jq -r '.status + "/" + (.conclusion // "none")' 2>/dev/null || echo "unknown/unknown")
+  RUN_STATUS=$(gh run view "$RUN_ID" --repo "$REPO" --json status,conclusion --jq -r '.status' 2>/dev/null || echo "unknown")
+  RUN_CONCLUSION=$(gh run view "$RUN_ID" --repo "$REPO" --json status,conclusion --jq -r '.conclusion // "none"' 2>/dev/null || echo "none")
+  STATUS="${RUN_STATUS}/${RUN_CONCLUSION}"
   
   if [ "$STATUS" != "$LAST_STATUS" ]; then
     echo -e "${BLUE}[$(date +%H:%M:%S)] Status: ${STATUS}${NC}"
@@ -121,7 +123,8 @@ while [ $ELAPSED -lt $TIMEOUT ]; do
   fi
   
   # Check if completed
-  if [[ "$STATUS" == "completed/success" ]]; then
+  if [ "$RUN_STATUS" = "completed" ]; then
+    if [ "$RUN_CONCLUSION" = "success" ]; then
     echo ""
     echo -e "${GREEN}✓ Workflow completed successfully!${NC}"
     echo ""
@@ -148,15 +151,17 @@ while [ $ELAPSED -lt $TIMEOUT ]; do
       fi
     fi
     
-    exit 0
-  elif [[ "$STATUS" == "completed/failure" ]] || [[ "$STATUS" == "completed/cancelled" ]]; then
-    echo ""
-    echo -e "${RED}✗ Workflow failed or was cancelled${NC}"
-    echo -e "${BLUE}Status: ${STATUS}${NC}"
-    echo ""
-    echo -e "${YELLOW}Last 50 lines of logs:${NC}"
-    gh run view "$RUN_ID" --repo "$REPO" --log --tail 50 || true
-    exit 1
+      exit 0
+    else
+      # Completed but not success (failure, cancelled, etc.)
+      echo ""
+      echo -e "${RED}✗ Workflow completed with status: ${RUN_CONCLUSION}${NC}"
+      echo -e "${BLUE}Status: ${STATUS}${NC}"
+      echo ""
+      echo -e "${YELLOW}Last 50 lines of logs:${NC}"
+      gh run view "$RUN_ID" --repo "$REPO" --log --tail 50 || true
+      exit 1
+    fi
   fi
   
   sleep 5
