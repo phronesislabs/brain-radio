@@ -84,7 +84,7 @@ jobs:
 
       - name: Run Renovate
         id: renovate
-        uses: renovatebot/github-action@c5fdc9f98fdf9e9bb16b5760f7e560256eb79326 # v44.0.2
+        uses: renovatebot/github-action@f7fad228a053c69a98e24f8e4f6cf40db8f61e08 # v44.2.1
         with:
           configurationFile: renovate.json
           token: ${{ secrets.GITHUB_TOKEN }}
