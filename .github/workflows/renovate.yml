@@ -82,6 +82,11 @@ jobs:
             fi
           fi
 
+      - name: Prepare cache directory
+        run: |
+          mkdir -p "${{ runner.temp }}/renovate-cache"
+          chmod 777 "${{ runner.temp }}/renovate-cache"
+
       - name: Run Renovate
         id: renovate
         uses: renovatebot/github-action@f7fad228a053c69a98e24f8e4f6cf40db8f61e08 # v44.2.1
