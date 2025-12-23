@@ -129,6 +129,7 @@
   "ignoreDeps": [],
   "ignorePresets": [
     ":prImmediately"
-  ]
+  ],
+  "cacheDir": "/tmp/renovate-cache"
 }
 
