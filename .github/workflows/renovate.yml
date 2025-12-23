@@ -99,6 +99,7 @@ jobs:
           RENOVATE_ONBOARDING: 'false'
           RENOVATE_REQUIRE_CONFIG: 'true'
           RENOVATE_DRY_RUN: ${{ steps.inputs.outputs.dry_run }}
+          RENOVATE_CACHE_DIR: ${{ runner.temp }}/renovate-cache
 
       - name: Summary
         if: always()
