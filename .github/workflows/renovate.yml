@@ -88,6 +88,7 @@ jobs:
         with:
           configurationFile: renovate.json
           token: ${{ secrets.GITHUB_TOKEN }}
+          docker-volumes: '${{ github.workspace }}:/tmp/renovate,${{ runner.temp }}/renovate-cache:/tmp/renovate-cache'
         env:
           LOG_LEVEL: debug
           RENOVATE_AUTODISCOVER: 'true'
@@ -99,8 +100,8 @@ jobs:
           RENOVATE_ONBOARDING: 'false'
           RENOVATE_REQUIRE_CONFIG: 'true'
           RENOVATE_DRY_RUN: ${{ steps.inputs.outputs.dry_run }}
-          RENOVATE_CACHE_DIR: ${{ runner.temp }}/renovate-cache
-          RENOVATE_BASE_DIR: ${{ github.workspace }}
+          RENOVATE_CACHE_DIR: /tmp/renovate-cache
+          RENOVATE_BASE_DIR: /tmp/renovate
 
       - name: Summary
         if: always()
