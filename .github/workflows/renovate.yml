@@ -82,10 +82,13 @@ jobs:
             fi
           fi
 
-      - name: Prepare cache directory
+      - name: Prepare workspace for Renovate
         run: |
           mkdir -p "${{ github.workspace }}/.renovate-cache"
           chmod 777 "${{ github.workspace }}/.renovate-cache"
+          # Create cache directory inside workspace that Renovate will use
+          mkdir -p "${{ github.workspace }}/cache"
+          chmod 777 "${{ github.workspace }}/cache"
 
       - name: Run Renovate
         id: renovate
@@ -105,9 +108,8 @@ jobs:
             -e RENOVATE_REQUIRE_CONFIG="true" \
             -e RENOVATE_DRY_RUN="${{ steps.inputs.outputs.dry_run }}" \
             -e RENOVATE_CONFIG_FILE="renovate.json" \
-            -e RENOVATE_CACHE_DIR="/tmp/renovate-cache" \
+            -e RENOVATE_CACHE_DIR="/tmp/renovate/cache" \
             -v "${{ github.workspace }}:/tmp/renovate" \
-            -v "${{ github.workspace }}/.renovate-cache:/tmp/renovate-cache" \
             -w /tmp/renovate \
             renovate/renovate:37.0.0
 
