@@ -82,41 +82,23 @@ jobs:
             fi
           fi
 
-      - name: Prepare workspace for Renovate
-        run: |
-          # Create cache directory inside workspace that Renovate will use
-          mkdir -p "${{ github.workspace }}/cache"
-          chmod 777 "${{ github.workspace }}/cache"
-
       - name: Run Renovate
         id: renovate
-        run: |
-          # Create cache directory inside container before Renovate runs
-          docker run --rm \
-            --entrypoint /bin/sh \
-            -v "${{ github.workspace }}:/tmp/renovate" \
-            renovate/renovate:37.0.0 \
-            -c "mkdir -p /tmp/renovate/cache && chmod 777 /tmp/renovate/cache" || true
-          
-          # Now run Renovate
-          docker run --rm \
-            -e RENOVATE_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
-            -e RENOVATE_PLATFORM="github" \
-            -e RENOVATE_REPOSITORIES="${{ github.repository }}" \
-            -e RENOVATE_AUTODISCOVER="true" \
-            -e RENOVATE_AUTOFIX="true" \
-            -e RENOVATE_AUTOMERGE="true" \
-            -e RENOVATE_AUTOMERGE_TYPE="pr" \
-            -e RENOVATE_AUTOMERGE_STRATEGY="squash" \
-            -e RENOVATE_INCLUDE_MAJOR="${{ steps.inputs.outputs.include_major }}" \
-            -e RENOVATE_LOG_LEVEL="debug" \
-            -e RENOVATE_ONBOARDING="false" \
-            -e RENOVATE_REQUIRE_CONFIG="true" \
-            -e RENOVATE_DRY_RUN="${{ steps.inputs.outputs.dry_run }}" \
-            -e RENOVATE_CONFIG_FILE="renovate.json" \
-            -v "${{ github.workspace }}:/tmp/renovate" \
-            -w /tmp/renovate \
-            renovate/renovate:37.0.0
+        uses: renovatebot/github-action@c5fdc9f98fdf9e9bb16b5760f7e560256eb79326 # v44.0.2
+        with:
+          configurationFile: renovate.json
+          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          LOG_LEVEL: debug
+          RENOVATE_AUTODISCOVER: 'true'
+          RENOVATE_AUTOFIX: 'true'
+          RENOVATE_AUTOMERGE: 'true'
+          RENOVATE_AUTOMERGE_TYPE: 'pr'
+          RENOVATE_AUTOMERGE_STRATEGY: 'squash'
+          RENOVATE_INCLUDE_MAJOR: ${{ steps.inputs.outputs.include_major }}
+          RENOVATE_ONBOARDING: 'false'
+          RENOVATE_REQUIRE_CONFIG: 'true'
+          RENOVATE_DRY_RUN: ${{ steps.inputs.outputs.dry_run }}
 
       - name: Summary
         if: always()
