@@ -38,7 +38,7 @@ jobs:
         run: |
           .checks/scripts/tooling/setup-tools.sh
       - name: Run Trivy filesystem scan
-        uses: aquasecurity/trivy-action@595be6a0f6560a0a8fc419ddf630567fc623531d # 0.22.0
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # 0.33.1
         with:
           scan-type: 'fs'
           scan-ref: '.'
